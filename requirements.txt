@@ -12,3 +12,4 @@ requests
 numpy
 pandas
 scikit-learn
+Pillow

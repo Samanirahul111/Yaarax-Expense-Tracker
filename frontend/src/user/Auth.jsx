@@ -57,6 +57,7 @@ export default function Auth() {
   const [verifiedEmail, setVerifiedEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [serverStatus, setServerStatus] = useState('checking'); // 'checking' | 'ready' | 'error'
 
   useEffect(() => {
     if (localStorage.getItem('access_token')) {
@@ -68,6 +69,25 @@ export default function Auth() {
     setIsOtpStep(false);
     setOtp('');
   }, [location, navigate]);
+
+  // Warm up the Render server on page load
+  useEffect(() => {
+    const warmUp = async () => {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 60000);
+        await fetch(`${API_BASE_URL}/api/auth/login/`, {
+          method: 'OPTIONS',
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        setServerStatus('ready');
+      } catch {
+        setServerStatus('ready'); // still allow login attempt
+      }
+    };
+    warmUp();
+  }, []);
 
   const toggleMode = (e) => {
     e.preventDefault();
@@ -194,6 +214,22 @@ export default function Auth() {
         border: '1px solid var(--glass-border-md)',
         zIndex: 1,
       }}>
+
+        {/* Server Warm-up Banner */}
+        {serverStatus === 'checking' && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
+            background: 'linear-gradient(90deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08))',
+            borderBottom: '1px solid rgba(245,158,11,0.3)',
+            padding: '0.6rem 1rem',
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            fontSize: '0.82rem', color: '#f59e0b',
+            justifyContent: 'center',
+          }}>
+            <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b', animation: 'pulse 1.5s infinite' }} />
+            Connecting to server... Please wait a moment before logging in.
+          </div>
+        )}
 
         {/* Left: Signup */}
         <div className={`auth-form-panel mobile-p-4 ${isLogin ? 'inactive-mobile' : ''}`} style={{

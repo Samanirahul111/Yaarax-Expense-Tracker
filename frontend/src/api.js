@@ -1,5 +1,3 @@
 // API Configuration
 
-// In a real production app, this would be an environment variable
-// e.g., import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
-export const API_BASE_URL = 'http://127.0.0.1:8000';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';

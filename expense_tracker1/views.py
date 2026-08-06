@@ -71,40 +71,82 @@ class ScanReceiptView(APIView):
             
         import os
         import json
-        from google import genai
-        from google.genai import types
+        import requests
         from dotenv import load_dotenv
         from django.conf import settings
         
-        # Force load the .env file on every request so you don't even need to restart the server!
         load_dotenv(os.path.join(settings.BASE_DIR, '.env'))
         
         receipt_file = request.FILES['receipt']
         image_bytes = receipt_file.read()
         
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key or api_key == "your_api_key_here":
-            return Response({'error': 'GEMINI_API_KEY is not configured on the backend. Please add it to your .env file.'}, status=500)
+        groq_api_key = os.environ.get("GROQ_API_KEY")
+        if not groq_api_key:
+            return Response({'error': 'GROQ_API_KEY is not configured in .env'}, status=500)
             
         try:
-            client = genai.Client(api_key=api_key)
+            from PIL import Image
+            import io
             
-            prompt = """
-            Extract the items and prices from this receipt image.
+            # Compress image before sending to OCR API (1MB limit for free tier)
+            img = Image.open(receipt_file)
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            img.thumbnail((1200, 1200))
+            
+            output = io.BytesIO()
+            img.save(output, format='JPEG', quality=75)
+            compressed_bytes = output.getvalue()
+            
+            # Step 1: Extract Text using OCR.space (Free API)
+            ocr_payload = {'isOverlayRequired': False, 'apikey': 'helloworld', 'language': 'eng'}
+            ocr_response = requests.post(
+                'https://api.ocr.space/parse/image',
+                files={'file': ('receipt.jpg', compressed_bytes, 'image/jpeg')},
+                data=ocr_payload
+            )
+            ocr_data = ocr_response.json()
+            
+            if ocr_data.get('IsErroredOnProcessing'):
+                error_msg = ocr_data.get('ErrorMessage', ['Unknown OCR error'])[0]
+                return Response({'error': f"OCR Error: {error_msg}"}, status=400)
+                
+            parsed_results = ocr_data.get('ParsedResults', [])
+            if not parsed_results:
+                return Response({'error': 'Could not extract text from the image.'}, status=500)
+                
+            extracted_text = parsed_results[0].get('ParsedText', '')
+            
+            # Step 2: Parse text to JSON using Groq (Free Text API)
+            prompt = f"""
+            Extract the items and prices from this OCR text of a receipt.
             Return ONLY a valid JSON array of objects, where each object has 'name' (string) and 'price' (number).
             If a price cannot be determined, omit the item.
-            Example: [{"name": "Milk", "price": 4.99}, {"name": "Bread", "price": 2.50}]
+            Example: [{{"name": "Milk", "price": 4.99}}, {{"name": "Bread", "price": 2.50}}]
+            
+            OCR TEXT:
+            {extracted_text}
             """
             
-            response = client.models.generate_content(
-                model='gemini-flash-latest',
-                contents=[
-                    prompt,
-                    types.Part.from_bytes(data=image_bytes, mime_type=receipt_file.content_type or 'image/jpeg')
-                ]
-            )
+            groq_headers = {
+                "Authorization": f"Bearer {groq_api_key}",
+                "Content-Type": "application/json"
+            }
             
-            text = response.text.strip()
+            groq_payload = {
+                "model": "llama-3.3-70b-versatile",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.1
+            }
+            
+            groq_response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=groq_headers, json=groq_payload)
+            groq_data = groq_response.json()
+            
+            if groq_response.status_code != 200:
+                return Response({'error': f"Groq API Error: {groq_data.get('error', {}).get('message', 'Unknown error')}"}, status=500)
+                
+            text = groq_data['choices'][0]['message']['content'].strip()
+            
             if text.startswith("```json"):
                 text = text[7:]
             if text.startswith("```"):
@@ -878,3 +920,120 @@ class PublicStatsView(APIView):
             'total_ratings': total_ratings,
             'average_rating': round(average_rating, 1)
         }, status=status.HTTP_200_OK)
+
+from .models import SavingsGoal
+from .serializers import SavingsGoalSerializer
+
+class SavingsGoalViewSet(viewsets.ModelViewSet):
+    serializer_class = SavingsGoalSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return SavingsGoal.objects.filter(user=self.request.user).order_by('deadline', '-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+import csv
+from django.http import HttpResponse
+
+class ExportDataView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="expenses_export.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Date', 'Category', 'Description', 'Amount', 'Payment Method'])
+
+        expenses = Expense.objects.filter(user=request.user).order_by('-date')
+        for expense in expenses:
+            category_name = expense.category.name if expense.category else 'Uncategorized'
+            writer.writerow([expense.date, category_name, expense.description, expense.amount, expense.payment_method])
+
+        return response
+
+import os
+import requests
+import json
+from dotenv import load_dotenv
+from django.conf import settings
+
+class AIChatbotView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        message = request.data.get('message', '')
+        if not message:
+            return Response({'error': 'Message is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        load_dotenv(os.path.join(settings.BASE_DIR, '.env'))
+        groq_api_key = os.environ.get("GROQ_API_KEY")
+        if not groq_api_key:
+            return Response({'error': 'GROQ API key not configured'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Build prompt to extract expense data
+        prompt = f"""
+        You are an AI financial assistant. The user will say something about an expense they just made.
+        Extract the following information:
+        - description (string): what they bought
+        - amount (number): how much they spent
+        - category (string): guess the category from this list (Food, Transport, Utilities, Entertainment, Shopping, Other)
+
+        Return ONLY a valid JSON object. If you cannot determine the amount, return {{"error": "Could not determine amount"}}.
+        Example: {{"description": "Starbucks Coffee", "amount": 5.50, "category": "Food"}}
+
+        User Message:
+        {message}
+        """
+
+        headers = {
+            "Authorization": f"Bearer {groq_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": "llama-3.3-70b-versatile",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.1
+        }
+
+        try:
+            groq_response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
+            groq_data = groq_response.json()
+            
+            text = groq_data['choices'][0]['message']['content'].strip()
+            
+            # Clean up markdown JSON formatting if present
+            if text.startswith("```json"): text = text[7:]
+            if text.startswith("```"): text = text[3:]
+            if text.endswith("```"): text = text[:-3]
+            
+            parsed = json.loads(text.strip())
+            
+            if 'error' in parsed:
+                return Response({'reply': "I couldn't quite catch the amount. Could you please specify how much you spent?"}, status=status.HTTP_200_OK)
+
+            amount = float(parsed.get('amount', 0))
+            description = parsed.get('description', 'AI Added Expense')
+            category_name = parsed.get('category', 'Other')
+
+            # Find or create category
+            category, _ = Category.objects.get_or_create(name=category_name)
+            
+            # Create expense
+            Expense.objects.create(
+                user=request.user,
+                amount=amount,
+                description=description,
+                category=category,
+                payment_method='Other' # default
+            )
+
+            reply = f"I've logged ${amount:.2f} for {description} under {category_name}. Anything else?"
+            return Response({'reply': reply, 'logged_expense': parsed}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

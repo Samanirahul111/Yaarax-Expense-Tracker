@@ -1,29 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Filter, ArrowLeft, Wallet } from 'lucide-react';
+import { Wallet, TrendingUp, ChevronRight, Plus, Target, Sparkles, ArrowUpRight } from 'lucide-react';
 import AddExpenseModal from './AddExpenseModal';
 import CategorySpends from './CategorySpends';
 import SetBudgetModal from './SetBudgetModal';
 import AuthAlertModal from '../components/AuthAlertModal';
 import { getCategoryColor } from './utils';
 import { API_BASE_URL } from '../api';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis } from 'recharts';
 
 const RADIAN = Math.PI / 180;
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-  if (percent < 0.05) return null; // Don't show label for very small slices
-
+  if (percent < 0.06) return null;
   return (
-    <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" style={{ fontSize: '0.85rem', fontWeight: '500' }}>
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central"
+      style={{ fontSize: '0.78rem', fontWeight: 700 }}>
       {`${(percent * 100).toFixed(0)}%`}
     </text>
   );
 };
 
+function StatCard({ label, value, sub, gradient, icon, delay }) {
+  return (
+    <div className={`animate-slide-up ${delay}`} style={{
+      background: gradient || 'var(--bg-glass)',
+      border: '1px solid var(--glass-border)',
+      borderRadius: 'var(--radius-xl)',
+      padding: '1.5rem',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem',
+      position: 'relative',
+      overflow: 'hidden',
+      transition: 'transform 0.3s var(--ease-bounce), box-shadow 0.3s ease',
+    }}
+      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-xl)'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+    >
+      {icon && (
+        <div style={{
+          position: 'absolute', top: '1rem', right: '1rem',
+          opacity: 0.15, fontSize: '2.5rem',
+        }}>{icon}</div>
+      )}
+      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        {label}
+      </div>
+      <div style={{
+        fontFamily: 'var(--font-heading)', fontSize: '1.75rem', fontWeight: 800,
+        color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1.1,
+      }}>
+        {value}
+      </div>
+      {sub && <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{sub}</div>}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -36,11 +71,8 @@ export default function Dashboard() {
   const [showGuestModal, setShowGuestModal] = useState(false);
 
   const handleAction = (action) => {
-    if (!localStorage.getItem('access_token')) {
-      setShowGuestModal(true);
-    } else {
-      action();
-    }
+    if (!localStorage.getItem('access_token')) setShowGuestModal(true);
+    else action();
   };
 
   const fetchDashboardData = async () => {
@@ -70,11 +102,11 @@ export default function Dashboard() {
         setLoading(false);
         return;
       }
-      
+
       const res = await fetch(`${API_BASE_URL}/api/dashboard-data/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       try {
         const forecastRes = await fetch(`${API_BASE_URL}/api/ml/budget-forecast/`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -86,15 +118,12 @@ export default function Dashboard() {
       } catch (e) {
         console.error("Failed to fetch forecast");
       }
-      
+
       if (!res.ok) {
-        if (res.status === 401) {
-          localStorage.removeItem('access_token');
-          navigate('/login');
-        }
+        if (res.status === 401) { localStorage.removeItem('access_token'); navigate('/login'); }
         throw new Error('Failed to fetch data');
       }
-      
+
       const result = await res.json();
       setData(result);
     } catch (e) {
@@ -104,305 +133,560 @@ export default function Dashboard() {
     }
   };
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  useEffect(() => { fetchDashboardData(); }, []);
 
-  if (loading) return <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ color: 'var(--text-secondary)' }}>Loading your dashboard...</div></div>;
+  if (loading) return (
+    <div style={{
+      minHeight: '100vh', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', gap: '1rem',
+      background: 'var(--bg-deep)',
+    }}>
+      <div style={{
+        width: '48px', height: '48px', borderRadius: '50%',
+        border: '3px solid var(--glass-border)',
+        borderTop: '3px solid var(--accent-primary)',
+        animation: 'spin-slow 0.8s linear infinite',
+      }} />
+      <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Loading dashboard…</div>
+    </div>
+  );
+
   if (!data) return (
-    <div className="page-wrapper animate-fade-in" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-      <h3 style={{color: '#dc2626'}}>Error connecting to server</h3>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Check the browser console or backend logs for details.</p>
+    <div className="page-wrapper animate-fade-in" style={{ flexDirection: 'column', gap: '1rem', textAlign: 'center' }}>
+      <div style={{ fontSize: '2rem' }}>⚠️</div>
+      <h3 style={{ color: 'var(--accent-rose)' }}>Connection Error</h3>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+        Could not connect to the server. Check your network or backend.
+      </p>
       <button className="btn-primary" onClick={fetchDashboardData}>Retry Connection</button>
     </div>
   );
 
   if (viewAllCategories) {
-    return <CategorySpends 
-      categorySpends={data.category_spends} 
+    return <CategorySpends
+      categorySpends={data.category_spends}
       monthName={data.monthly_spends[data.monthly_spends.length - 1]?.month}
-      onBack={() => setViewAllCategories(false)} 
+      onBack={() => setViewAllCategories(false)}
     />;
   }
 
   const topCategories = data.category_spends.slice(0, 4);
   const totalCategorySpends = topCategories.reduce((acc, cat) => acc + cat.total, 0) || 1;
-
   const maxMonthlyTotal = Math.max(...data.monthly_spends.map(m => m.total), 1);
 
+  const budget = parseFloat(data.monthly_budget);
+  const spent = data.total_spends_this_month;
+  const budgetPercentage = budget > 0 ? (spent / budget) * 100 : 0;
+  const displayPercentage = Math.min(budgetPercentage, 100);
+  const isOverBudget = budget > 0 && spent > budget;
+
+  const budgetBarColor = budgetPercentage >= 90
+    ? 'linear-gradient(90deg, #f43f5e, #ef4444)'
+    : budgetPercentage > 50
+    ? 'linear-gradient(90deg, #f59e0b, #f97316)'
+    : 'var(--grad-primary)';
+
+  const totalPayments = data.payment_method_spends?.reduce((acc, p) => acc + p.total, 0) || 1;
+
   return (
-    <div className="animate-fade-in" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', minHeight: '100vh', paddingBottom: '4rem', fontFamily: 'var(--font-family)' }}>
-      
-      {/* Background Animated Shapes for consistency */}
+    <div className="animate-fade-in" style={{
+      background: 'var(--bg-deep)',
+      color: 'var(--text-primary)',
+      minHeight: '100vh',
+      paddingBottom: '5rem',
+      fontFamily: 'var(--font-body)',
+      position: 'relative',
+    }}>
+      {/* Aurora background */}
       <div className="bg-animation-wrapper">
-        <div className="shape shape-1"></div>
-        <div className="shape shape-2"></div>
+        <div className="shape shape-1" />
+        <div className="shape shape-2" />
       </div>
 
-      <div className="tools-header" style={{ marginBottom: '2.5rem' }}>
-        <div className="page-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ padding: '8px', background: 'white', borderRadius: '10px' }}>
-            <Wallet color="var(--accent-primary)" size={24} />
+      {/* Page Header */}
+      <div className="tools-header" style={{ marginBottom: '2rem' }}>
+        <div className="page-container flex-responsive-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              width: '40px', height: '40px', borderRadius: 'var(--radius-md)',
+              background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Wallet color="var(--accent-primary)" size={20} />
+            </div>
+            <div>
+              <h2 style={{
+                margin: 0, fontFamily: 'var(--font-heading)', fontSize: '1.35rem',
+                fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text-primary)',
+              }}>
+                Spends Dashboard
+              </h2>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: '1px' }}>
+                Track & manage your finances
+              </div>
+            </div>
           </div>
-          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700', color: 'white' }}>Spends Dashboard</h2>
+
+          {/* Quick action buttons */}
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button
+              onClick={async () => {
+                const token = localStorage.getItem('access_token');
+                if (!token) return;
+                try {
+                  const res = await fetch(`${API_BASE_URL}/api/export-data/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+                  if (!res.ok) throw new Error('Failed to export');
+                  const blob = await res.blob();
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'expenses_export.csv';
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                } catch (e) {
+                  console.error(e);
+                  alert('Export failed');
+                }
+              }}
+              className="btn-secondary"
+              style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+            >
+              <TrendingUp size={15} />
+              <span className="mobile-hidden">Export CSV</span>
+            </button>
+            <button
+              onClick={() => handleAction(() => setShowBudgetModal(true))}
+              className="btn-secondary"
+              style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+            >
+              <Target size={15} />
+              <span className="mobile-hidden">Set Budget</span>
+            </button>
+            <button
+              onClick={() => handleAction(() => setShowAddModal(true))}
+              className="btn-primary"
+              style={{ padding: '0.5rem 1.125rem', fontSize: '0.875rem' }}
+            >
+              <Plus size={15} />
+              Add Spend
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="page-container">
+      <div className="page-container" style={{ position: 'relative', zIndex: 1 }}>
 
-        {/* Total Spends Overview */}
-        <div className="animate-slide-up" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2.5rem', background: 'white', padding: '2rem', borderRadius: '24px', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)' }}>
-          <div className="responsive-flex-row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        {/* ─── Spend Overview Hero Card ─── */}
+        <div className="animate-slide-up card-solid" style={{
+          padding: '2rem',
+          marginBottom: '1.5rem',
+          background: 'linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(139,92,246,0.08) 50%, var(--bg-elevated) 100%)',
+          border: '1px solid var(--glass-border-md)',
+          borderRadius: 'var(--radius-2xl)',
+          overflow: 'hidden',
+          position: 'relative',
+        }}>
+          {/* Decorative orb */}
+          <div style={{
+            position: 'absolute', top: '-40px', right: '-40px',
+            width: '200px', height: '200px',
+            background: 'radial-gradient(circle, rgba(59,130,246,0.2), transparent)',
+            filter: 'blur(30px)', pointerEvents: 'none',
+          }} />
+
+          <div className="responsive-flex-row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem' }}>
             <div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '1rem', marginBottom: '0.5rem', fontWeight: '500' }}>Spends this month</div>
-              <div style={{ fontSize: '3rem', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-1px' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
+                Total Spends This Month
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: 'clamp(2rem, 5vw, 3.25rem)',
+                fontWeight: 900,
+                letterSpacing: '-0.04em',
+                lineHeight: 1,
+                background: 'var(--grad-primary)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                marginBottom: '0.5rem',
+              }}>
                 ₹{data.total_spends_this_month.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              {forecast !== null && (
-                <div style={{ padding: '0.8rem 1.5rem', background: '#f0fdf4', color: '#166534', borderRadius: '12px', fontWeight: '600', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #bbf7d0' }}>
-                  ✨ AI Forecast Next Month: ₹{forecast.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+              {budget > 0 && (
+                <div style={{ fontSize: '0.85rem', color: isOverBudget ? 'var(--accent-rose)' : 'var(--text-secondary)' }}>
+                  {isOverBudget
+                    ? `🚨 Over budget by ₹${(spent - budget).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+                    : `Budget: ₹${budget.toLocaleString('en-IN', { maximumFractionDigits: 0 })} · ${budgetPercentage.toFixed(0)}% used`
+                  }
                 </div>
               )}
-              <button onClick={() => handleAction(() => setShowBudgetModal(true))} className="btn-secondary hover-lift" style={{ padding: '0.8rem 1.5rem', fontSize: '1rem', background: 'var(--bg-primary)' }}>
-                Set Budget
-              </button>
-              <button onClick={() => handleAction(() => setShowAddModal(true))} className="btn-primary hover-lift" style={{ padding: '0.8rem 1.5rem', fontSize: '1rem', boxShadow: '0 10px 20px -5px rgba(37,99,235,0.3)' }}>
-                + Add Spend
-              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-end' }}>
+              {/* Financial Health Score */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '1rem',
+                padding: '0.75rem 1.25rem',
+                background: 'var(--bg-glass-md)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--radius-xl)',
+                boxShadow: 'var(--shadow-md)',
+              }}>
+                <div style={{ position: 'relative', width: '48px', height: '48px' }}>
+                  <svg width="48" height="48" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="10" />
+                    <circle cx="50" cy="50" r="40" fill="none" stroke={budgetPercentage > 90 ? 'var(--accent-rose)' : budgetPercentage > 50 ? 'var(--accent-amber)' : 'var(--accent-emerald)'} strokeWidth="10" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * (Math.max(100 - budgetPercentage, 0)) / 100)} style={{ transition: 'stroke-dashoffset 1.5s ease-out' }} />
+                  </svg>
+                  <div style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                    {Math.max(100 - Math.floor(budgetPercentage), 0)}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Health Score
+                  </div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {budgetPercentage > 90 ? 'Needs Attention' : budgetPercentage > 50 ? 'On Track' : 'Excellent'}
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Forecast badge */}
+              {forecast !== null && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
+                  padding: '0.75rem 1.25rem',
+                  background: 'rgba(16,185,129,0.12)',
+                  border: '1px solid rgba(16,185,129,0.25)',
+                  borderRadius: 'var(--radius-xl)',
+                  flexShrink: 0,
+                  width: '100%'
+                }}>
+                  <Sparkles size={16} color="var(--accent-emerald)" />
+                  <div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--accent-emerald)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      AI Forecast
+                    </div>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}>
+                      ₹{forecast.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Budget Progress Bar */}
-          {parseFloat(data.monthly_budget) > 0 && (() => {
-            const budget = parseFloat(data.monthly_budget);
-            const spent = data.total_spends_this_month;
-            const percentage = (spent / budget) * 100;
-            const displayPercentage = Math.min(percentage, 100);
-            const isOverBudget = spent > budget;
-            
-            let barColor = 'var(--accent-primary)'; // Blue for <= 50%
-            if (percentage >= 90) {
-              barColor = '#ef4444'; // Red for >= 90%
-            } else if (percentage > 50) {
-              barColor = '#eab308'; // Yellow for 51-89%
-            }
-            
-            return (
-              <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {percentage >= 90 && (
-                  <div style={{ 
-                    background: percentage >= 100 ? '#fee2e2' : '#fef9c3', 
-                    color: percentage >= 100 ? '#991b1b' : '#854d0e',
-                    padding: '0.75rem 1rem', 
-                    borderRadius: '8px', 
-                    fontSize: '0.9rem', 
-                    display: 'flex', 
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    fontWeight: '500'
-                  }}>
-                    <span>
-                      {percentage >= 100 
-                        ? '🚨 You have reached your budget limit!' 
-                        : '⚠️ You have used over 90% of your budget.'}
-                    </span>
-                    {percentage >= 100 && (
-                      <button 
-                        onClick={() => handleAction(() => setShowBudgetModal(true))} 
-                        style={{
-                          background: '#ef4444', color: 'white', border: 'none',
-                          padding: '0.4rem 0.75rem', borderRadius: '6px', cursor: 'pointer',
-                          fontWeight: '600', fontSize: '0.8rem'
-                        }}
-                      >
-                        Update Budget
-                      </button>
-                    )}
-                  </div>
-                )}
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: '500' }}>
-                  <span style={{ color: isOverBudget ? '#ef4444' : 'var(--text-secondary)' }}>
-                    {isOverBudget ? 'Over budget by ' : 'Budget used: '}
-                    {percentage.toFixed(0)}%
+          {budget > 0 && (
+            <div style={{ marginTop: '1.5rem' }}>
+              {/* Warning alert */}
+              {budgetPercentage >= 90 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '0.625rem 1rem',
+                  background: budgetPercentage >= 100 ? 'rgba(244,63,94,0.12)' : 'rgba(245,158,11,0.12)',
+                  border: `1px solid ${budgetPercentage >= 100 ? 'rgba(244,63,94,0.25)' : 'rgba(245,158,11,0.25)'}`,
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
+                  color: budgetPercentage >= 100 ? 'var(--accent-rose)' : 'var(--accent-amber)',
+                  marginBottom: '0.75rem',
+                  gap: '1rem',
+                }}>
+                  <span>
+                    {budgetPercentage >= 100
+                      ? '🚨 Budget limit reached!'
+                      : '⚠️ Over 90% of budget used'}
                   </span>
-                  <span style={{ color: 'var(--text-primary)' }}>
-                    ₹{spent.toLocaleString('en-IN', { maximumFractionDigits: 0 })} / ₹{budget.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                  </span>
+                  {budgetPercentage >= 100 && (
+                    <button
+                      onClick={() => handleAction(() => setShowBudgetModal(true))}
+                      style={{
+                        background: 'var(--accent-rose)', color: 'white', border: 'none',
+                        padding: '0.3rem 0.75rem', borderRadius: '6px', cursor: 'pointer',
+                        fontWeight: 700, fontSize: '0.78rem', whiteSpace: 'nowrap',
+                        fontFamily: 'var(--font-body)',
+                      }}
+                    >
+                      Update Budget
+                    </button>
+                  )}
                 </div>
-                <div style={{ height: '8px', background: 'var(--bg-primary)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ 
-                    height: '100%', 
-                    width: `${displayPercentage}%`, 
-                    background: barColor,
-                    borderRadius: '4px',
-                    transition: 'width 0.5s ease, background-color 0.5s ease'
-                  }}></div>
-                </div>
+              )}
+
+              {/* Bar track */}
+              <div style={{
+                height: '6px', background: 'rgba(255,255,255,0.08)',
+                borderRadius: 'var(--radius-full)', overflow: 'hidden',
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${displayPercentage}%`,
+                  background: budgetBarColor,
+                  borderRadius: 'var(--radius-full)',
+                  transition: 'width 0.8s var(--ease-spring)',
+                  boxShadow: budgetPercentage >= 90 ? '0 0 8px rgba(244,63,94,0.5)' : '0 0 8px rgba(59,130,246,0.5)',
+                }} />
               </div>
-            );
-          })()}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.4rem', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                <span>{budgetPercentage.toFixed(0)}% used</span>
+                <span>₹{spent.toLocaleString('en-IN', { maximumFractionDigits: 0 })} / ₹{budget.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* ─── Main Grid ─── */}
         <div className="responsive-grid">
-          
+
           {/* Top Categories Card */}
-          <div className="animate-slide-up delay-100" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1.25rem' }}>Top Categories</h3>
-              <button style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '0.5rem 1rem', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '500' }}>
-                {data.monthly_spends[data.monthly_spends.length - 1]?.month || 'July'} 2026
-                <span style={{ fontSize: '0.7rem' }}>▼</span>
-              </button>
+          <div className="animate-slide-up delay-100 card-solid" style={{ padding: '1.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{
+                margin: 0, fontFamily: 'var(--font-heading)', fontWeight: 700,
+                fontSize: '1.1rem', color: 'var(--text-primary)',
+              }}>Top Categories</h3>
+              <div style={{
+                padding: '0.3rem 0.75rem',
+                background: 'var(--bg-glass)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--radius-full)',
+                fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)',
+              }}>
+                {data.monthly_spends[data.monthly_spends.length - 1]?.month || 'This'} 2026
+              </div>
             </div>
-            
-            {/* Progress Bar */}
-            <div style={{ display: 'flex', height: '28px', borderRadius: '14px', overflow: 'hidden', marginBottom: '2rem', background: 'var(--bg-primary)' }}>
+
+            {/* Segmented bar */}
+            <div style={{
+              display: 'flex', height: '10px', borderRadius: 'var(--radius-full)',
+              overflow: 'hidden', marginBottom: '1.5rem',
+              background: 'rgba(255,255,255,0.06)',
+            }}>
               {topCategories.map((cat, idx) => (
-                <div key={idx} style={{ 
-                  width: `${(cat.total / totalCategorySpends) * 100}%`, 
+                <div key={idx} style={{
+                  width: `${(cat.total / totalCategorySpends) * 100}%`,
                   background: getCategoryColor(cat.category__name, idx),
-                  borderRight: idx < topCategories.length - 1 ? '3px solid white' : 'none'
+                  borderRight: idx < topCategories.length - 1 ? '2px solid var(--bg-elevated)' : 'none',
+                  transition: 'width 0.5s var(--ease-spring)',
                 }} />
               ))}
             </div>
 
-            {/* Categories List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2rem' }}>
-              {topCategories.map((cat, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: getCategoryColor(cat.category__name, idx) }}></div>
-                    <div style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{cat.category__name}</div>
+            {/* Category list */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', marginBottom: '1.5rem' }}>
+              {topCategories.map((cat, idx) => {
+                const pct = ((cat.total / totalCategorySpends) * 100).toFixed(0);
+                const color = getCategoryColor(cat.category__name, idx);
+                return (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{
+                        width: '10px', height: '10px', borderRadius: '50%',
+                        background: color, boxShadow: `0 0 6px ${color}66`, flexShrink: 0,
+                      }} />
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>
+                        {cat.category__name}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 500 }}>{pct}%</span>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.9rem' }}>
+                        ₹{cat.total.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ color: 'var(--text-primary)', fontWeight: '600' }}>₹{cat.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                );
+              })}
+              {topCategories.length === 0 && (
+                <div style={{ color: 'var(--text-dim)', textAlign: 'center', padding: '2rem 0', fontSize: '0.9rem' }}>
+                  No expenses yet. Add your first spend!
                 </div>
-              ))}
-              {topCategories.length === 0 && <div style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '1rem 0' }}>No categories yet.</div>}
+              )}
             </div>
 
-            <button onClick={() => setViewAllCategories(true)} className="btn-secondary" style={{ width: '100%' }}>
-              View all categories
+            <button
+              onClick={() => setViewAllCategories(true)}
+              className="btn-secondary"
+              style={{ width: '100%', fontSize: '0.875rem' }}
+            >
+              View all categories <ChevronRight size={14} />
             </button>
           </div>
 
-          {/* Monthly Spends Chart Card */}
-          <div className="animate-slide-up delay-200" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)' }}>
-            <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1.25rem', marginBottom: '2rem' }}>Monthly Spends</h3>
-            
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
-              <button style={{ background: 'var(--text-primary)', border: 'none', color: 'white', padding: '0.5rem 1.25rem', borderRadius: '24px', whiteSpace: 'nowrap', fontWeight: '500' }}>All</button>
-              <button style={{ background: 'white', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', padding: '0.5rem 1.25rem', borderRadius: '24px', whiteSpace: 'nowrap', fontWeight: '500' }}>Food, Beverages...</button>
-              <button style={{ background: 'white', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', padding: '0.5rem 1.25rem', borderRadius: '24px', whiteSpace: 'nowrap', fontWeight: '500' }}>Utility</button>
+          {/* Monthly Spends Chart */}
+          <div className="animate-slide-up delay-200 card-solid" style={{ padding: '1.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <h3 style={{
+                margin: 0, fontFamily: 'var(--font-heading)', fontWeight: 700,
+                fontSize: '1.1rem', color: 'var(--text-primary)',
+              }}>Monthly Spends</h3>
+              <TrendingUp size={18} color="var(--accent-primary)" />
             </div>
 
-            <div style={{ position: 'relative', height: '220px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', paddingTop: '1rem', paddingRight: '2.5rem' }}>
-              {/* Horizontal Grid Lines */}
-              {[1, 0.75, 0.5, 0.25, 0].map((ratio, idx) => {
-                const val = ((maxMonthlyTotal * ratio) / 1000);
-                return (
-                  <div key={idx} style={{ position: 'absolute', bottom: `${ratio * 100}%`, left: 0, right: 0, borderBottom: '1px dashed var(--border-color)', display: 'flex', justifyContent: 'flex-end' }}>
-                    <span style={{ position: 'absolute', right: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', transform: 'translateY(50%)', background: 'white', paddingLeft: '0.5rem', fontWeight: '500' }}>
-                      ₹{val < 1 && val > 0 ? val.toFixed(1) : val.toFixed(0)}k
-                    </span>
-                  </div>
-                );
-              })}
-
-              {/* Bars */}
-              {data.monthly_spends.map((monthData, idx) => {
-                const heightPercentage = maxMonthlyTotal > 0 ? (monthData.total / maxMonthlyTotal) * 100 : 0;
-                const isCurrentMonth = idx === data.monthly_spends.length - 1;
-                return (
-                  <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 1, width: '18%', position: 'relative' }}>
-                    {isCurrentMonth && monthData.total > 0 && (
-                      <div style={{ position: 'absolute', top: `-${heightPercentage + 20}%`, background: 'var(--text-primary)', color: 'white', padding: '0.35rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', transform: 'translateY(-100%)', zIndex: 10, fontWeight: '600', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                        ₹{monthData.total.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                      </div>
-                    )}
-                    <div className="hover-lift" style={{ 
-                      width: '32px', 
-                      height: `${heightPercentage}%`, 
-                      minHeight: monthData.total > 0 ? '6px' : '0',
-                      background: isCurrentMonth ? 'var(--accent-primary)' : '#e2e8f0', 
-                      borderRadius: '6px 6px 0 0',
-                      transition: 'height 0.5s ease-out, background 0.3s'
-                    }} />
-                    <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: isCurrentMonth ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: isCurrentMonth ? '600' : '500' }}>{monthData.month}</div>
-                  </div>
-                );
-              })}
+            <div style={{ width: '100%', height: '220px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data.monthly_spends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'var(--text-dim)', fontSize: 12, fontWeight: 500 }} 
+                    dy={10} 
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'var(--text-dim)', fontSize: 12, fontWeight: 500 }} 
+                    tickFormatter={(value) => `₹${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`}
+                  />
+                  <Tooltip 
+                    cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1, strokeDasharray: '3 3' }}
+                    contentStyle={{ background: 'var(--bg-glass-md)', backdropFilter: 'blur(10px)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-primary)', boxShadow: 'var(--shadow-xl)' }}
+                    itemStyle={{ color: 'var(--accent-primary)', fontWeight: 'bold' }}
+                    formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Spends']}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="total" 
+                    stroke="var(--accent-primary)" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorTotal)" 
+                    animationDuration={1500}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Payment Method Spends Card */}
-          <div className="animate-slide-up delay-300" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1.25rem' }}>Payment Methods</h3>
+          {/* Payment Methods */}
+          <div className="animate-slide-up delay-300 card-solid" style={{ padding: '1.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{
+                margin: 0, fontFamily: 'var(--font-heading)', fontWeight: 700,
+                fontSize: '1.1rem', color: 'var(--text-primary)',
+              }}>Payment Methods</h3>
             </div>
-            
-            {/* Progress Bar */}
-            <div style={{ display: 'flex', height: '28px', borderRadius: '14px', overflow: 'hidden', marginBottom: '2rem', background: 'var(--bg-primary)' }}>
+
+            {/* Segmented bar */}
+            <div style={{
+              display: 'flex', height: '10px', borderRadius: 'var(--radius-full)',
+              overflow: 'hidden', marginBottom: '1.5rem',
+              background: 'rgba(255,255,255,0.06)',
+            }}>
               {data.payment_method_spends?.map((pm, idx) => (
-                <div key={idx} style={{ 
-                  width: `${(pm.total / (data.payment_method_spends.reduce((acc, p) => acc + p.total, 0) || 1)) * 100}%`, 
+                <div key={idx} style={{
+                  width: `${(pm.total / totalPayments) * 100}%`,
                   background: getCategoryColor(pm.payment_method, idx + 5),
-                  borderRight: idx < data.payment_method_spends.length - 1 ? '3px solid white' : 'none'
+                  borderRight: idx < data.payment_method_spends.length - 1 ? '2px solid var(--bg-elevated)' : 'none',
+                  transition: 'width 0.5s var(--ease-spring)',
                 }} title={`${pm.payment_method}: ₹${pm.total}`} />
               ))}
             </div>
 
-            {/* Methods List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2rem' }}>
-              {data.payment_method_spends?.map((pm, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: getCategoryColor(pm.payment_method, idx + 5) }}></div>
-                    <div style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{pm.payment_method}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+              {data.payment_method_spends?.map((pm, idx) => {
+                const pct = ((pm.total / totalPayments) * 100).toFixed(0);
+                const color = getCategoryColor(pm.payment_method, idx + 5);
+                return (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{
+                        width: '10px', height: '10px', borderRadius: '50%',
+                        background: color, boxShadow: `0 0 6px ${color}66`, flexShrink: 0,
+                      }} />
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>
+                        {pm.payment_method}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 500 }}>{pct}%</span>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.9rem' }}>
+                        ₹{pm.total.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ color: 'var(--text-primary)', fontWeight: '600' }}>₹{pm.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                );
+              })}
+              {(!data.payment_method_spends || data.payment_method_spends.length === 0) && (
+                <div style={{ color: 'var(--text-dim)', textAlign: 'center', padding: '1.5rem 0', fontSize: '0.9rem' }}>
+                  No payment methods recorded yet.
                 </div>
-              ))}
-              {(!data.payment_method_spends || data.payment_method_spends.length === 0) && <div style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '1rem 0' }}>No payment methods used yet.</div>}
+              )}
             </div>
           </div>
 
-          {/* Category-wise Breakdown Pie Chart */}
-          <div className="animate-slide-up delay-400" style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ margin: 0, fontWeight: '700', fontSize: '1.1rem', color: '#c29b2b', textTransform: 'uppercase', letterSpacing: '1px' }}>Category-wise Breakdown</h3>
+          {/* Category Pie Chart */}
+          <div className="animate-slide-up delay-400 card-solid" style={{ padding: '1.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{
+                margin: 0, fontFamily: 'var(--font-heading)', fontWeight: 700,
+                fontSize: '1.1rem', color: 'var(--text-primary)',
+              }}>Category Breakdown</h3>
             </div>
-            
-            <div style={{ width: '100%', height: '260px', display: 'flex', justifyContent: 'center' }}>
+
+            <div style={{ width: '100%', height: '240px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={data.category_spends.length > 0 ? data.category_spends : [{category__name: 'None', total: 1}]}
+                    data={data.category_spends.length > 0 ? data.category_spends : [{ category__name: 'None', total: 1 }]}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
                     label={data.category_spends.length > 0 ? renderCustomizedLabel : false}
-                    outerRadius={100}
-                    fill="#8884d8"
+                    outerRadius={95}
+                    innerRadius={30}
                     dataKey="total"
+                    paddingAngle={2}
                   >
-                    {data.category_spends.length > 0 ? data.category_spends.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getCategoryColor(entry.category__name, index)} />
-                    )) : <Cell fill="#e2e8f0" />}
+                    {data.category_spends.length > 0
+                      ? data.category_spends.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={getCategoryColor(entry.category__name, index)} />
+                        ))
+                      : <Cell fill="rgba(255,255,255,0.08)" />
+                    }
                   </Pie>
-                  {data.category_spends.length > 0 && <Tooltip formatter={(value) => `₹${value.toLocaleString('en-IN')}`} />}
+                  {data.category_spends.length > 0 && (
+                    <Tooltip
+                      formatter={(value) => `₹${value.toLocaleString('en-IN')}`}
+                      contentStyle={{
+                        background: 'var(--bg-elevated)',
+                        border: '1px solid var(--glass-border-md)',
+                        borderRadius: 'var(--radius-md)',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.85rem',
+                        boxShadow: 'var(--shadow-lg)',
+                      }}
+                      labelStyle={{ color: 'var(--text-secondary)' }}
+                    />
+                  )}
                 </PieChart>
               </ResponsiveContainer>
             </div>
 
-            {/* Custom Legend */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+            {/* Legend */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem', marginTop: '1rem' }}>
               {data.category_spends.map((cat, idx) => (
                 <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <div style={{ width: '12px', height: '12px', background: getCategoryColor(cat.category__name, idx) }}></div>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '500' }}>{cat.category__name}</span>
+                  <div style={{
+                    width: '8px', height: '8px', borderRadius: '50%',
+                    background: getCategoryColor(cat.category__name, idx),
+                    boxShadow: `0 0 4px ${getCategoryColor(cat.category__name, idx)}88`,
+                  }} />
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                    {cat.category__name}
+                  </span>
                 </div>
               ))}
             </div>
@@ -412,10 +696,10 @@ export default function Dashboard() {
 
       <AddExpenseModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} onAdded={fetchDashboardData} />
       <SetBudgetModal isOpen={showBudgetModal} onClose={() => setShowBudgetModal(false)} onAdded={fetchDashboardData} currentBudget={data.monthly_budget} />
-      
+
       {showGuestModal && (
-        <AuthAlertModal 
-          onClose={() => setShowGuestModal(false)} 
+        <AuthAlertModal
+          onClose={() => setShowGuestModal(false)}
           message="You can't use any functionality without logging in. Create a free account to track your real expenses!"
         />
       )}

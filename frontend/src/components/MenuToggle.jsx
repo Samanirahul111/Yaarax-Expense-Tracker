@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, FileText, PieChart, Users, Calculator, PiggyBank } from 'lucide-react';
+import { Home, FileText, PieChart, Users, Calculator, PiggyBank, TrendingUp } from 'lucide-react';
 import './MenuToggle.css';
 
 export default function MenuToggle() {
@@ -41,7 +41,8 @@ export default function MenuToggle() {
 
   const navItems = [
     { path: '/dashboard', icon: <Home size={20} />, label: 'Home' },
-    { path: '/savings', icon: <PiggyBank size={20} />, label: 'Savings' },
+    { path: '/savings-goals', icon: <PiggyBank size={20} />, label: 'Banks & Goals' },
+    { path: '/savings', icon: <TrendingUp size={20} />, label: 'Investments' },
     { path: '/logs', icon: <FileText size={20} />, label: 'Logs' },
     { path: '/analytics', icon: <PieChart size={20} />, label: 'Analytics' },
     { path: '/groups', icon: <Users size={20} />, label: 'Groups' },

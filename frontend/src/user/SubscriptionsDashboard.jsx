@@ -212,114 +212,86 @@ export default function SubscriptionsDashboard() {
     return acc;
   }, 0);
 
-  if (loading) return <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ color: 'var(--text-secondary)' }}>Loading...</div></div>;
+  const inputSt = { width: '100%', padding: '11px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border-md)', background: 'rgba(255,255,255,0.04)', color: 'var(--text-primary)', marginBottom: '1rem', fontSize: '0.95rem', outline: 'none', fontFamily: 'var(--font-body)', boxSizing: 'border-box' };
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-deep)' }}>
+      <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid var(--glass-border)', borderTop: '3px solid var(--accent-primary)', animation: 'spin-slow 0.8s linear infinite' }} />
+    </div>
+  );
 
   return (
-    <div className="animate-fade-in" style={{ background: 'var(--bg-primary)', minHeight: '100vh', paddingBottom: '4rem', fontFamily: 'var(--font-family)' }}>
-      
+    <div className="animate-fade-in" style={{ background: 'var(--bg-deep)', minHeight: '100vh', paddingBottom: '5rem', fontFamily: 'var(--font-body)', position: 'relative' }}>
       <div className="bg-animation-wrapper">
-        <div className="shape shape-1"></div>
-        <div className="shape shape-2"></div>
+        <div className="shape shape-1" style={{ opacity: 0.4 }} />
+        <div className="shape shape-2" style={{ opacity: 0.3 }} />
       </div>
 
-      <div className="tools-header" style={{ marginBottom: '2.5rem' }}>
-        <div className="page-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ padding: '8px', background: 'white', borderRadius: '10px' }}>
-            <Calendar color="var(--accent-primary)" size={24} />
+      <div className="tools-header" style={{ marginBottom: '2rem' }}>
+        <div className="page-container flex-responsive-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Calendar color="var(--accent-violet)" size={20} />
+            </div>
+            <div>
+              <h2 style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Subscriptions</h2>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: '1px' }}>Manage recurring payments</div>
+            </div>
           </div>
-          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700', color: 'white' }}>Subscriptions</h2>
+          <button onClick={() => handleAction(() => setShowAddModal(true))} className="btn-primary" style={{ padding: '0.5rem 1.125rem', fontSize: '0.875rem' }}>
+            <Plus size={15} /> Add Subscription
+          </button>
         </div>
       </div>
 
-      <div className="page-container">
-        
-        {/* Overview Card */}
-        <div className="animate-slide-up" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2.5rem', background: 'white', padding: '2rem', borderRadius: '24px', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)' }}>
-          <div className="responsive-flex-row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '1rem', marginBottom: '0.5rem', fontWeight: '500' }}>Estimated Monthly Cost</div>
-              <div style={{ fontSize: '3rem', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-1px' }}>
-                ₹{monthlyTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                From {activeSubscriptions.length} active subscriptions
-              </div>
-            </div>
-            <div>
-              <button onClick={() => handleAction(() => setShowAddModal(true))} className="btn-primary hover-lift" style={{ padding: '0.8rem 1.5rem', fontSize: '1rem', boxShadow: '0 10px 20px -5px rgba(37,99,235,0.3)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Plus size={20} /> Add Subscription
-              </button>
-            </div>
+      <div className="page-container" style={{ position: 'relative', zIndex: 1 }}>
+        {/* Overview */}
+        <div className="animate-slide-up card-solid" style={{ padding: '2rem', marginBottom: '2rem', background: 'linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(59,130,246,0.08) 100%)', borderRadius: 'var(--radius-2xl)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: '-30px', right: '-30px', width: '150px', height: '150px', background: 'radial-gradient(circle, rgba(139,92,246,0.25), transparent)', filter: 'blur(25px)', pointerEvents: 'none' }} />
+          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>Estimated Monthly Cost</div>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, background: 'var(--grad-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '0.5rem' }}>
+            ₹{monthlyTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{activeSubscriptions.length} active subscriptions</div>
         </div>
 
-        {/* List */}
-        <div className="animate-slide-up delay-100" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <h3 style={{ margin: '0 0 1rem 0', fontWeight: '700', fontSize: '1.25rem', color: 'var(--text-primary)' }}>Your Subscriptions</h3>
-          
-          {subscriptions.length === 0 && (
-            <div style={{ background: 'white', padding: '3rem', borderRadius: '24px', textAlign: 'center', color: 'var(--text-secondary)', border: '1px solid rgba(0,0,0,0.05)' }}>
-              No subscriptions added yet.
-            </div>
-          )}
+        <h3 style={{ color: 'var(--text-primary)', marginBottom: '1rem', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.1rem' }}>Your Subscriptions</h3>
 
+        {subscriptions.length === 0 && (
+          <div className="animate-scale-in card-solid" style={{ padding: '3rem', textAlign: 'center' }}>
+            <CreditCard size={40} color="var(--text-dim)" style={{ marginBottom: '1rem' }} />
+            <h3 style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem', fontFamily: 'var(--font-heading)' }}>No subscriptions yet</h3>
+            <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem' }}>Add your recurring subscriptions to track costs.</p>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', marginBottom: '2.5rem' }}>
           {subscriptions.map(sub => (
-            <div key={sub.id} style={{ 
-              background: 'white', 
-              padding: '1.5rem', 
-              borderRadius: '20px', 
-              display: 'flex', 
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
-              border: '1px solid rgba(0,0,0,0.05)',
-              opacity: sub.is_active ? 1 : 0.6
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                <div style={{ 
-                  width: '48px', height: '48px', borderRadius: '12px', 
-                  background: sub.is_active ? 'var(--bg-primary)' : '#f1f5f9', 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: sub.is_active ? 'var(--accent-primary)' : 'var(--text-secondary)'
-                }}>
-                  <CreditCard size={24} />
+            <div key={sub.id} className="animate-slide-up card-solid" style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: sub.is_active ? 1 : 0.55, transition: 'transform 0.25s var(--ease-bounce), box-shadow 0.25s, opacity 0.3s' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: 'var(--radius-md)', background: sub.is_active ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${sub.is_active ? 'rgba(59,130,246,0.25)' : 'var(--glass-border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: sub.is_active ? 'var(--accent-primary)' : 'var(--text-dim)', flexShrink: 0 }}>
+                  <CreditCard size={20} />
                 </div>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)' }}>
-                    {sub.name}
-                  </h4>
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>{sub.billing_cycle}</span>
-                    {sub.next_billing_date && (
-                      <>
-                        <span>•</span>
-                        <span>Next bill: {new Date(sub.next_billing_date).toLocaleDateString()}</span>
-                      </>
-                    )}
+                  <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-heading)', marginBottom: '0.25rem' }}>{sub.name}</h4>
+                  <div style={{ color: 'var(--text-dim)', fontSize: '0.78rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <span style={{ background: 'var(--bg-glass)', padding: '0.1rem 0.45rem', borderRadius: 'var(--radius-full)', fontSize: '0.72rem', fontWeight: 600 }}>{sub.billing_cycle}</span>
+                    {sub.next_billing_date && <span>Next: {new Date(sub.next_billing_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>}
                   </div>
                 </div>
               </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                    ₹{parseFloat(sub.amount).toLocaleString('en-IN')}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button 
-                    onClick={() => handleAction(() => toggleStatus(sub.id, sub.is_active))}
-                    title={sub.is_active ? "Pause" : "Resume"}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: sub.is_active ? '#eab308' : '#22c55e', padding: '8px' }}
-                  >
-                    {sub.is_active ? <XCircle size={20} /> : <CheckCircle size={20} />}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>₹{parseFloat(sub.amount).toLocaleString('en-IN')}</div>
+                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                  <button onClick={() => handleAction(() => toggleStatus(sub.id, sub.is_active))} title={sub.is_active ? 'Pause' : 'Resume'}
+                    style={{ background: 'var(--bg-glass)', border: '1px solid var(--glass-border)', cursor: 'pointer', color: sub.is_active ? 'var(--accent-amber)' : 'var(--accent-emerald)', padding: '6px', borderRadius: 'var(--radius-sm)', display: 'flex' }}>
+                    {sub.is_active ? <XCircle size={16} /> : <CheckCircle size={16} />}
                   </button>
-                  <button 
-                    onClick={() => handleAction(() => deleteSubscription(sub.id))}
-                    title="Delete"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '8px' }}
-                  >
-                    <Trash2 size={20} />
+                  <button onClick={() => handleAction(() => deleteSubscription(sub.id))} title="Delete"
+                    style={{ background: 'var(--bg-glass)', border: '1px solid var(--glass-border)', cursor: 'pointer', color: 'var(--accent-rose)', padding: '6px', borderRadius: 'var(--radius-sm)', display: 'flex' }}>
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>
@@ -327,45 +299,28 @@ export default function SubscriptionsDashboard() {
           ))}
         </div>
         
-        {/* Explore Popular Subscriptions */}
-        <div className="animate-slide-up delay-200" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '3rem' }}>
-          <h3 style={{ margin: '0 0 1rem 0', fontWeight: '700', fontSize: '1.25rem', color: 'var(--text-primary)' }}>Explore Popular Subscriptions (India)</h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+        {/* Explore */}
+        <div style={{ marginTop: '3rem' }}>
+          <h3 style={{ color: 'var(--text-primary)', marginBottom: '1.25rem', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.1rem' }}>Explore Popular Subscriptions (India)</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.25rem' }}>
             {POPULAR_PLANS.map((platform, idx) => (
-              <div key={idx} style={{ background: 'white', padding: '1.5rem', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.05)' }}>
-                <h4 style={{ margin: '0 0 1rem 0', fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)', borderBottom: '2px solid var(--bg-primary)', paddingBottom: '0.5rem' }}>
-                  {platform.platform_name}
-                </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div key={idx} className="animate-slide-up card-solid" style={{ animationDelay: `${idx * 30}ms`, padding: '1.5rem' }}>
+                <h4 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-heading)', paddingBottom: '0.625rem', borderBottom: '1px solid var(--glass-border)' }}>{platform.platform_name}</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
                   {platform.plans.map((plan, pIdx) => (
-                    <div key={pIdx} style={{ background: 'var(--bg-primary)', padding: '1rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div key={pIdx} style={{ background: 'rgba(255,255,255,0.03)', padding: '0.875rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{plan.plan_name}</span>
-                        <span style={{ fontWeight: '700', color: 'var(--accent-primary)' }}>
-                          ₹{plan.price_monthly || plan.price_yearly || plan.price_six_months || plan.price_quarterly}
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>/{plan.price_monthly ? 'mo' : plan.price_yearly ? 'yr' : 'cycle'}</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.875rem' }}>{plan.plan_name}</span>
+                        <span style={{ fontWeight: 800, color: 'var(--accent-primary)', fontFamily: 'var(--font-heading)', fontSize: '0.9rem' }}>
+                          ₹{plan.price_monthly || plan.price_yearly || plan.price_six_months || plan.price_quarterly}<span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 500 }}>/{plan.price_monthly ? 'mo' : 'yr'}</span>
                         </span>
                       </div>
-                      <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                      <ul style={{ margin: 0, paddingLeft: '1.1rem', color: 'var(--text-secondary)', fontSize: '0.78rem', lineHeight: 1.6 }}>
                         {plan.features.map((f, fIdx) => <li key={fIdx}>{f}</li>)}
                       </ul>
-                      <button 
-                        onClick={() => {
-                          setFormData({
-                            name: `${platform.platform_name} - ${plan.plan_name}`,
-                            amount: plan.price_monthly || plan.price_yearly || plan.price_six_months || plan.price_quarterly,
-                            billing_cycle: plan.price_monthly ? 'Monthly' : plan.price_yearly ? 'Yearly' : 'Monthly',
-                            next_billing_date: '',
-                            description: plan.features.join(', ')
-                          });
-                          handleAction(() => setShowAddModal(true));
-                        }}
-                        style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'white', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', color: 'var(--text-primary)', transition: 'background 0.2s', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
-                        onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
-                        onMouseOut={(e) => e.currentTarget.style.background = 'white'}
-                      >
-                        <Plus size={16} /> Add to tracker
+                      <button onClick={() => { setFormData({ name: `${platform.platform_name} - ${plan.plan_name}`, amount: plan.price_monthly || plan.price_yearly || plan.price_six_months || plan.price_quarterly, billing_cycle: plan.price_monthly ? 'Monthly' : 'Yearly', next_billing_date: '', description: plan.features.join(', ') }); handleAction(() => setShowAddModal(true)); }}
+                        className="btn-secondary" style={{ marginTop: '0.25rem', fontSize: '0.8rem', padding: '0.4rem 0.875rem', justifyContent: 'center' }}>
+                        <Plus size={13} /> Add to tracker
                       </button>
                     </div>
                   ))}
@@ -374,46 +329,38 @@ export default function SubscriptionsDashboard() {
             ))}
           </div>
         </div>
-
       </div>
 
       {showAddModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000, padding: '20px'
-        }}>
-          <div style={{
-            backgroundColor: 'var(--bg-primary)', borderRadius: '24px', width: '100%', maxWidth: '400px',
-            padding: '30px', position: 'relative', boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
-          }}>
-            <button onClick={() => setShowAddModal(false)} style={{
-              position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)'
-            }}>✕</button>
-            <h2 style={{ margin: '0 0 24px 0', color: 'var(--text-primary)' }}>Add Subscription</h2>
-            
+        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowAddModal(false); }}>
+          <div className="modal-panel animate-scale-in" style={{ width: '90%', maxWidth: '420px', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 800 }}>Add Subscription</h2>
+              <button onClick={() => setShowAddModal(false)} style={{ background: 'var(--bg-glass)', border: '1px solid var(--glass-border)', cursor: 'pointer', color: 'var(--text-secondary)', padding: '6px', borderRadius: 'var(--radius-sm)', display: 'flex' }}>✕</button>
+            </div>
             <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>Service Name</label>
-                <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', boxSizing: 'border-box' }} placeholder="e.g. Netflix" />
+              <label className="auth-label">Service Name</label>
+              <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={inputSt} placeholder="e.g. Netflix"
+                onFocus={e => { e.target.style.borderColor = 'var(--accent-primary)'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.15)'; }}
+                onBlur={e => { e.target.style.borderColor = 'var(--glass-border-md)'; e.target.style.boxShadow = 'none'; }} />
+              <label className="auth-label">Amount (₹)</label>
+              <input type="number" step="0.01" required value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} style={inputSt}
+                onFocus={e => { e.target.style.borderColor = 'var(--accent-primary)'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.15)'; }}
+                onBlur={e => { e.target.style.borderColor = 'var(--glass-border-md)'; e.target.style.boxShadow = 'none'; }} />
+              <label className="auth-label">Billing Cycle</label>
+              <select value={formData.billing_cycle} onChange={e => setFormData({...formData, billing_cycle: e.target.value})} style={{ ...inputSt, cursor: 'pointer' }}>
+                <option value="Monthly">Monthly</option>
+                <option value="Yearly">Yearly</option>
+                <option value="Weekly">Weekly</option>
+              </select>
+              <label className="auth-label">Next Billing Date</label>
+              <input type="date" required value={formData.next_billing_date} onChange={e => setFormData({...formData, next_billing_date: e.target.value})} style={{ ...inputSt, marginBottom: '1.25rem' }}
+                onFocus={e => { e.target.style.borderColor = 'var(--accent-primary)'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.15)'; }}
+                onBlur={e => { e.target.style.borderColor = 'var(--glass-border-md)'; e.target.style.boxShadow = 'none'; }} />
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button type="button" onClick={() => setShowAddModal(false)} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
+                <button type="submit" className="btn-primary" style={{ flex: 1 }}>Save</button>
               </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>Amount (₹)</label>
-                <input type="number" step="0.01" required value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', boxSizing: 'border-box' }} />
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>Billing Cycle</label>
-                <select value={formData.billing_cycle} onChange={(e) => setFormData({...formData, billing_cycle: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', boxSizing: 'border-box' }}>
-                  <option value="Monthly">Monthly</option>
-                  <option value="Yearly">Yearly</option>
-                  <option value="Weekly">Weekly</option>
-                </select>
-              </div>
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>Next Billing Date</label>
-                <input type="date" required value={formData.next_billing_date} onChange={(e) => setFormData({...formData, next_billing_date: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', boxSizing: 'border-box' }} />
-              </div>
-              <button type="submit" className="btn-primary" style={{ width: '100%' }}>Save Subscription</button>
             </form>
           </div>
         </div>

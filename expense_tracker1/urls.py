@@ -28,7 +28,11 @@ from .views import (
     JoinGroupView,
     FeedbackCreateView,
     PublicStatsView,
+    SavingsGoalViewSet,
+    ExportDataView,
+    AIChatbotView,
 )
+from .plaid_views import CreateLinkTokenView, SetAccessTokenView, GetAccountsView, ConnectMockBankView
 
 router = DefaultRouter()
 router.register(r'expenses', ExpenseViewSet, basename='expense')
@@ -37,6 +41,7 @@ router.register(r'groups', ExpenseGroupViewSet, basename='expensegroup')
 router.register(r'group-expenses', GroupExpenseViewSet, basename='groupexpense')
 router.register(r'investments', InvestmentViewSet, basename='investment')
 router.register(r'subscriptions', SubscriptionViewSet, basename='subscription')
+router.register(r'savings-goals', SavingsGoalViewSet, basename='savingsgoal')
 
 urlpatterns = [
     path('expenses/scan-receipt/', ScanReceiptView.as_view(), name='scan-receipt'),
@@ -61,4 +66,10 @@ urlpatterns = [
     path('ml/budget-forecast/', MLBudgetForecastView.as_view(), name='ml-budget-forecast'),
     path('feedback/', FeedbackCreateView.as_view(), name='submit-feedback'),
     path('public-stats/', PublicStatsView.as_view(), name='public-stats'),
+    path('export-data/', ExportDataView.as_view(), name='export-data'),
+    path('ai-chat/', AIChatbotView.as_view(), name='ai-chat'),
+    path('plaid/create-link-token/', CreateLinkTokenView.as_view(), name='plaid-create-link-token'),
+    path('plaid/set-access-token/', SetAccessTokenView.as_view(), name='plaid-set-access-token'),
+    path('plaid/accounts/', GetAccountsView.as_view(), name='plaid-accounts'),
+    path('mock-banks/connect/', ConnectMockBankView.as_view(), name='connect-mock-bank'),
 ]

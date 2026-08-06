@@ -104,7 +104,7 @@ const GroupDashboard = () => {
 
       {/* Invite Code Section */}
       {group.invite_code && (
-        <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px dashed var(--accent-primary)' }}>
+        <div style={{ backgroundColor: 'var(--bg-elevated)', padding: '16px', borderRadius: '12px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px dashed var(--accent-primary)' }}>
           <div>
             <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Group Invite Code</div>
             <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'var(--accent-primary)', letterSpacing: '2px' }}>{group.invite_code}</div>
@@ -123,13 +123,13 @@ const GroupDashboard = () => {
 
       {/* Summary Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+        <div style={{ backgroundColor: 'var(--bg-elevated)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
           <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>Total Group Spend</div>
           <div style={{ fontSize: '1.8rem', fontWeight: '700', color: 'var(--text-primary)' }}>
             ₹{settlements?.total_spent || 0}
           </div>
         </div>
-        <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+        <div style={{ backgroundColor: 'var(--bg-elevated)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
           <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>Per Person Share</div>
           <div style={{ fontSize: '1.8rem', fontWeight: '700', color: 'var(--text-primary)' }}>
             ₹{settlements?.per_person_share?.toFixed(2) || 0}
@@ -144,7 +144,7 @@ const GroupDashboard = () => {
           {group.members && group.members.map(member => (
             <div key={member.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '70px' }}>
               <div style={{ 
-                width: '50px', height: '50px', borderRadius: '50%', backgroundColor: 'var(--bg-secondary)', 
+                width: '50px', height: '50px', borderRadius: '50%', backgroundColor: 'var(--bg-elevated)', 
                 border: '2px solid var(--accent-primary)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 marginBottom: '8px'
               }}>
@@ -166,7 +166,7 @@ const GroupDashboard = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
         {/* Settlements Section */}
-        <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+        <div style={{ backgroundColor: 'var(--bg-elevated)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
           <h2 style={{ fontSize: '1.2rem', margin: '0 0 16px 0', color: 'var(--text-primary)' }}>How to Settle Up</h2>
           {(!settlements?.settlements || settlements.settlements.length === 0) ? (
             <p style={{ color: 'var(--text-secondary)', margin: 0 }}>All settled up! No one owes anything.</p>
@@ -194,7 +194,7 @@ const GroupDashboard = () => {
         <div>
           <h2 style={{ fontSize: '1.2rem', margin: '0 0 16px 0', color: 'var(--text-primary)' }}>Recent Expenses</h2>
           {group.expenses.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px', backgroundColor: 'var(--bg-secondary)', borderRadius: '16px' }}>
+            <div style={{ textAlign: 'center', padding: '40px', backgroundColor: 'var(--bg-elevated)', borderRadius: '16px' }}>
               <Receipt size={32} style={{ color: 'var(--text-secondary)', marginBottom: '12px', opacity: 0.5 }} />
               <p style={{ margin: 0, color: 'var(--text-secondary)' }}>No expenses recorded yet.</p>
             </div>
@@ -203,7 +203,7 @@ const GroupDashboard = () => {
               {group.expenses.map(exp => (
                 <div key={exp.id} style={{ 
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px',
+                  backgroundColor: 'var(--bg-elevated)', padding: '16px', borderRadius: '16px',
                   border: '1px solid var(--border-color)'
                 }}>
                   <div>

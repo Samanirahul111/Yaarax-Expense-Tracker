@@ -468,9 +468,15 @@ class UserProfileView(APIView):
     def post(self, request):
         try:
             profile = request.user.profile
-            serializer = UserProfileSerializer(profile, data=request.data, partial=True, context={'request': request})
         except ObjectDoesNotExist:
-            serializer = UserProfileSerializer(data=request.data, context={'request': request})
+            import datetime
+            profile = UserProfile.objects.create(
+                user=request.user,
+                user_type='personal',
+                date_of_birth=datetime.date(2000, 1, 1)
+            )
+        
+        serializer = UserProfileSerializer(profile, data=request.data, partial=True, context={'request': request})
         
         if serializer.is_valid():
             serializer.save(user=request.user)

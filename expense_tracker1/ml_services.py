@@ -2,23 +2,21 @@ import math
 
 # Category keyword map
 CATEGORY_KEYWORDS = {
-    "Food, Beverages and Groceries": ["coffee", "starbucks", "cafe", "food", "lunch", "dinner", "restaurant", "eat", "meal", "grocery", "walmart", "supermarket", "milk", "bread", "zomato", "swiggy", "pizza", "burger"],
-    "Fuel": ["uber", "taxi", "petrol", "gas", "commute", "car", "transit", "train", "bus", "subway", "rapido", "ola", "autorickshaw"],
-    "Utility & Bills": ["netflix", "spotify", "prime", "internet", "electricity", "water", "bill", "utility", "phone", "jio", "airtel", "bsnl", "vodafone"],
-    "Hotels, Motels, Resorts": ["flight", "hotel", "travel", "vacation", "resort", "trip", "airbnb", "stay", "oyo"],
-    "Clothing and Apparel": ["clothes", "shirt", "pants", "fashion", "apparel", "shoes", "dress", "jacket", "myntra", "ajio", "zara"],
-    "Repair and Services": ["repair", "maintenance", "plumber", "mechanic", "service", "fix", "clean"],
-    "Durables and Home Goods": ["furniture", "tv", "electronics", "phone", "home", "goods", "appliance", "laptop", "amazon", "flipkart"],
-    "To People": ["family", "gift", "friend", "party", "donate", "gpay", "paytm", "phonepe", "transfer"],
-    "Others": [],
+    "Food & Dining": ["coffee", "starbucks", "cafe", "food", "lunch", "dinner", "restaurant", "eat", "meal", "zomato", "swiggy", "pizza", "burger"],
+    "Groceries": ["grocery", "walmart", "supermarket", "milk", "bread"],
+    "Transportation": ["uber", "taxi", "petrol", "gas", "commute", "car", "transit", "train", "bus", "subway", "rapido", "ola", "autorickshaw", "fuel"],
+    "Utilities": ["netflix", "spotify", "prime", "internet", "electricity", "water", "bill", "utility", "phone", "jio", "airtel", "bsnl", "vodafone"],
+    "Travel": ["flight", "hotel", "travel", "vacation", "resort", "trip", "airbnb", "stay", "oyo"],
+    "Shopping": ["clothes", "shirt", "pants", "fashion", "apparel", "shoes", "dress", "jacket", "myntra", "ajio", "zara", "amazon", "flipkart", "electronics", "phone", "laptop"],
+    "Housing": ["rent", "furniture", "home", "appliance", "repair", "maintenance", "plumber", "mechanic", "service", "fix", "clean"],
+    "Miscellaneous": ["family", "gift", "friend", "party", "donate", "gpay", "paytm", "phonepe", "transfer"],
 }
-
 
 def predict_category(description: str) -> str:
     if not description:
-        return "Others"
+        return "Miscellaneous"
     desc_lower = description.lower()
-    best_category = "Others"
+    best_category = "Miscellaneous"
     best_score = 0
     for category, keywords in CATEGORY_KEYWORDS.items():
         score = sum(1 for kw in keywords if kw in desc_lower)

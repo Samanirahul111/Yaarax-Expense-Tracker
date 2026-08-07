@@ -216,6 +216,11 @@ export default function Navbar() {
                       src={profilePictureUrl.startsWith('http') ? profilePictureUrl : `${API_BASE_URL}${profilePictureUrl}`}
                       alt="Profile"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        setProfilePictureUrl(null);
+                        localStorage.removeItem('profile_picture');
+                      }}
                     />
                   ) : initials}
                 </div>
@@ -306,6 +311,11 @@ export default function Navbar() {
                           src={profilePictureUrl.startsWith('http') ? profilePictureUrl : `${API_BASE_URL}${profilePictureUrl}`}
                           alt="Profile"
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            setProfilePictureUrl(null);
+                            localStorage.removeItem('profile_picture');
+                          }}
                         />
                       ) : initials}
                     </div>

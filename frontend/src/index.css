@@ -9,13 +9,13 @@
    ============================================================ */
 :root {
   /* Backgrounds */
-  --bg-deep:      #060b18;
-  --bg-surface:   #0d1426;
-  --bg-elevated:  #111827;
-  --bg-card:      #111827;
-  --bg-glass:     rgba(255, 255, 255, 0.04);
-  --bg-glass-md:  rgba(255, 255, 255, 0.07);
-  --bg-glass-lg:  rgba(255, 255, 255, 0.10);
+  --bg-deep:      #000000;
+  --bg-surface:   #0a0a0a;
+  --bg-elevated:  #111111;
+  --bg-card:      #111111;
+  --bg-glass:     rgba(255, 255, 255, 0.03);
+  --bg-glass-md:  rgba(255, 255, 255, 0.05);
+  --bg-glass-lg:  rgba(255, 255, 255, 0.08);
 
   /* Glass Borders */
   --glass-border:      rgba(255, 255, 255, 0.10);

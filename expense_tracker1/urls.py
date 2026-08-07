@@ -31,6 +31,7 @@ from .views import (
     SavingsGoalViewSet,
     ExportDataView,
     AIChatbotView,
+    SocialAuthView,
 )
 from .plaid_views import CreateLinkTokenView, SetAccessTokenView, GetAccountsView, ConnectMockBankView
 
@@ -50,6 +51,7 @@ urlpatterns = [
     path('auth/signup/', SignupView.as_view(), name='signup'),
     path('auth/login/', LoginView.as_view(), name='login'),
     path('auth/verify-otp/', VerifyOTPView.as_view(), name='verify-otp'),
+    path('auth/social/', SocialAuthView.as_view(), name='social-auth'),
     path('auth/forgot-password/', ForgotPasswordOTPView.as_view(), name='forgot-password'),
     path('auth/reset-password/', ResetPasswordView.as_view(), name='reset-password'),
     path('auth/profile/', UserProfileView.as_view(), name='profile'),

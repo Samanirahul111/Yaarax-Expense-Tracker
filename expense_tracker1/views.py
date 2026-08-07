@@ -1,7 +1,9 @@
 import calendar
 import random
 import traceback
+import requests as http_requests
 
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -23,6 +25,113 @@ from .serializers import (
     UserProfileSerializer,
     UserSerializer,
 )
+
+
+class SocialAuthView(APIView):
+    """Handle Google and Facebook OAuth token verification and JWT issuance."""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        provider = request.data.get('provider')  # 'google' or 'facebook'
+        token = request.data.get('token')        # ID token (Google) or access token (Facebook)
+
+        if not provider or not token:
+            return Response({'error': 'provider and token are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if provider == 'google':
+            user_info = self._verify_google_token(token)
+        elif provider == 'facebook':
+            user_info = self._verify_facebook_token(token)
+        else:
+            return Response({'error': 'Unsupported provider'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user_info:
+            return Response({'error': 'Invalid or expired social token'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        email = user_info.get('email')
+        name = user_info.get('name', '')
+
+        if not email:
+            return Response({'error': 'Could not retrieve email from social provider'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get or create user
+        user = User.objects.filter(email=email).first()
+        if not user:
+            # Auto-generate a unique username from email
+            base_username = email.split('@')[0]
+            username = base_username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                first_name=name.split(' ')[0] if name else '',
+                last_name=' '.join(name.split(' ')[1:]) if name and ' ' in name else '',
+            )
+            # Set unusable password since auth is via social provider
+            user.set_unusable_password()
+            user.save()
+
+        # Issue JWT tokens
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'username': user.username,
+            'email': user.email,
+            'is_new_user': not user.last_login,
+        }, status=status.HTTP_200_OK)
+
+    def _verify_google_token(self, id_token):
+        """Verify Google ID token using Google's tokeninfo endpoint."""
+        try:
+            resp = http_requests.get(
+                'https://oauth2.googleapis.com/tokeninfo',
+                params={'id_token': id_token},
+                timeout=10
+            )
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            # Validate the audience matches our client ID
+            google_client_id = getattr(settings, 'GOOGLE_CLIENT_ID', None)
+            if google_client_id and data.get('aud') != google_client_id:
+                print(f"Google token audience mismatch: {data.get('aud')} != {google_client_id}")
+                return None
+            return {
+                'email': data.get('email'),
+                'name': data.get('name', ''),
+            }
+        except Exception as e:
+            print(f"Google token verification error: {e}")
+            return None
+
+    def _verify_facebook_token(self, access_token):
+        """Verify Facebook access token using Graph API."""
+        try:
+            resp = http_requests.get(
+                'https://graph.facebook.com/me',
+                params={
+                    'fields': 'id,name,email',
+                    'access_token': access_token,
+                },
+                timeout=10
+            )
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            if 'error' in data:
+                return None
+            return {
+                'email': data.get('email'),
+                'name': data.get('name', ''),
+            }
+        except Exception as e:
+            print(f"Facebook token verification error: {e}")
+            return None
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()

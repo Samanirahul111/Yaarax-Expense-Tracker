@@ -16,6 +16,7 @@ from .views import (
     AdminPromoteUserView,
     AdminDemoteUserView,
     ExpenseGroupViewSet,
+    GroupMemberViewSet,
     GroupExpenseViewSet,
     GroupSettlementAPIView,
     ScanReceiptView,
@@ -39,6 +40,7 @@ router = DefaultRouter()
 router.register(r'expenses', ExpenseViewSet, basename='expense')
 router.register(r'categories', CategoryViewSet)
 router.register(r'groups', ExpenseGroupViewSet, basename='expensegroup')
+router.register(r'group-members', GroupMemberViewSet, basename='groupmember')
 router.register(r'group-expenses', GroupExpenseViewSet, basename='groupexpense')
 router.register(r'investments', InvestmentViewSet, basename='investment')
 router.register(r'subscriptions', SubscriptionViewSet, basename='subscription')

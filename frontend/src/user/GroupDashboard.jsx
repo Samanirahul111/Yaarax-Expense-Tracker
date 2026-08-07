@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Receipt, IndianRupee } from 'lucide-react';
+import { ArrowLeft, Plus, Receipt, IndianRupee, Users, Settings } from 'lucide-react';
 import AddGroupExpenseModal from './AddGroupExpenseModal';
 import AuthAlertModal from '../components/AuthAlertModal';
+import EditGroupModal from './EditGroupModal';
+import ManageMembersModal from './ManageMembersModal';
 import { API_BASE_URL } from '../api';
 
 
@@ -15,6 +17,8 @@ const GroupDashboard = () => {
   const [error, setError] = useState('');
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAuthAlert, setShowAuthAlert] = useState(false);
+  const [showEditGroup, setShowEditGroup] = useState(false);
+  const [showManageMembers, setShowManageMembers] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -75,31 +79,79 @@ const GroupDashboard = () => {
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 style={{ fontSize: '1.8rem', color: 'var(--text-primary)', margin: 0, flex: 1 }}>{group.name}</h1>
-        <button 
-          onClick={() => {
-            const token = localStorage.getItem('access_token');
-            if (!token) {
-              setShowAuthAlert(true);
-              return;
-            }
-            setShowAddExpense(true);
-          }}
-          style={{
-            backgroundColor: 'var(--accent-primary)',
-            color: 'white',
-            border: 'none',
-            padding: '10px 16px',
-            borderRadius: '12px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          <Plus size={18} /> Add Expense
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+          {group.photo && (
+            <img 
+              src={group.photo.startsWith('http') ? group.photo : `${API_BASE_URL}${group.photo}`} 
+              alt="Group" 
+              style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent-primary)' }}
+            />
+          )}
+          <h1 style={{ fontSize: '1.8rem', color: 'var(--text-primary)', margin: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{group.name}</h1>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button 
+            onClick={() => setShowManageMembers(true)}
+            style={{
+              backgroundColor: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+              padding: '10px',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            title="Manage Members"
+          >
+            <Users size={18} />
+          </button>
+          
+          <button 
+            onClick={() => setShowEditGroup(true)}
+            style={{
+              backgroundColor: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+              padding: '10px',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            title="Edit Group"
+          >
+            <Settings size={18} />
+          </button>
+
+          <button 
+            onClick={() => {
+              const token = localStorage.getItem('access_token');
+              if (!token) {
+                setShowAuthAlert(true);
+                return;
+              }
+              setShowAddExpense(true);
+            }}
+            style={{
+              backgroundColor: 'var(--accent-primary)',
+              color: 'white',
+              border: 'none',
+              padding: '10px 16px',
+              borderRadius: '12px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <Plus size={18} /> Add Expense
+          </button>
+        </div>
       </div>
 
       {/* Invite Code Section */}
@@ -239,6 +291,20 @@ const GroupDashboard = () => {
           message="Please log in or sign up to add an expense."
         />
       )}
+
+      <EditGroupModal
+        isOpen={showEditGroup}
+        onClose={() => setShowEditGroup(false)}
+        group={group}
+        onGroupUpdated={(updatedGroup) => setGroup(updatedGroup)}
+      />
+
+      <ManageMembersModal
+        isOpen={showManageMembers}
+        onClose={() => setShowManageMembers(false)}
+        group={group}
+        onGroupUpdated={(updatedGroup) => setGroup(updatedGroup)}
+      />
     </div>
   );
 };

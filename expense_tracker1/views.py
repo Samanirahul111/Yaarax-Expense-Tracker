@@ -669,7 +669,30 @@ class AdminDemoteUserView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 from .models import ExpenseGroup, GroupMember, GroupExpense
-from .serializers import ExpenseGroupSerializer, GroupExpenseSerializer
+from .serializers import ExpenseGroupSerializer, GroupExpenseSerializer, GroupMemberSerializer
+
+class GroupMemberViewSet(viewsets.ModelViewSet):
+    serializer_class = GroupMemberSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return GroupMember.objects.filter(group__user=self.request.user) | GroupMember.objects.filter(group__members__user=self.request.user).distinct()
+
+    def create(self, request, *args, **kwargs):
+        group_id = request.data.get('group')
+        try:
+            group = ExpenseGroup.objects.get(id=group_id)
+        except ExpenseGroup.DoesNotExist:
+            return Response({"error": "Group not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        if group.user != request.user and not group.members.filter(user=request.user).exists():
+            return Response({"error": "Not authorized to add members to this group"}, status=status.HTTP_403_FORBIDDEN)
+            
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 class ExpenseGroupViewSet(viewsets.ModelViewSet):
     serializer_class = ExpenseGroupSerializer

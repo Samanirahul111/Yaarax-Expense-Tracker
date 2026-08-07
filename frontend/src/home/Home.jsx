@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../api';
-
+import developerProfileImg from '../assets/developer-profile.jpg';
 function AnimatedCounter({ target, suffix = '' }) {
   const [count, setCount] = useState(0);
   useEffect(() => {
@@ -83,9 +83,9 @@ const features = [
 const team = [
   {
     name: 'Rahul Samani',
-    role: 'Full Stack Developer',
-    bio: 'Passionate about building scalable front-end interfaces and robust backend architectures.',
-    initial: 'RS',
+    role: 'Full Stack Developer & Founder',
+    bio: 'Crafted with passion by a developer dedicated to financial empowerment and elegant software engineering. Building scalable interfaces and robust architectures to simplify your financial life.',
+    image: developerProfileImg,
     gradient: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
   },
 ];
@@ -351,8 +351,8 @@ export default function Home() {
                   Developer
                 </span>
               </div>
-              <h2 className="section-title">Developed By </h2>
-              <p className="section-subtitle">The brilliant minds behind Yaarax Expense Tracker.</p>
+              <h2 className="section-title">Meet the Creator</h2>
+              <p className="section-subtitle">The vision and code behind Yaarax Expense Tracker.</p>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -380,7 +380,11 @@ export default function Home() {
                   boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
                   fontFamily: 'var(--font-heading)',
                 }}>
-                  {team[0].initial}
+                  {team[0].image ? (
+                    <img src={team[0].image} alt={team[0].name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                  ) : (
+                    team[0].initial
+                  )}
                 </div>
                 <div>
                   <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>

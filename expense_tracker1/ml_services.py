@@ -1,4 +1,8 @@
 import math
+import os
+import requests
+from dotenv import load_dotenv
+from django.conf import settings
 
 # Category keyword map
 CATEGORY_KEYWORDS = {
@@ -15,6 +19,37 @@ CATEGORY_KEYWORDS = {
 def predict_category(description: str) -> str:
     if not description:
         return "Miscellaneous"
+        
+    categories_list = list(CATEGORY_KEYWORDS.keys())
+    
+    # Try Groq API first
+    try:
+        load_dotenv(os.path.join(settings.BASE_DIR, '.env'))
+        groq_api_key = os.environ.get("GROQ_API_KEY")
+        if groq_api_key:
+            prompt = f"Categorize the expense '{description}' into EXACTLY ONE of these categories: {', '.join(categories_list)}. Reply with ONLY the category name and nothing else."
+            headers = {
+                "Authorization": f"Bearer {groq_api_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "llama-3.3-70b-versatile",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.1
+            }
+            response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload, timeout=5)
+            if response.status_code == 200:
+                text = response.json()['choices'][0]['message']['content'].strip()
+                # Clean up if the AI adds quotes or punctuation
+                text = text.replace('"', '').replace("'", "")
+                for cat in categories_list:
+                    if cat.lower() in text.lower():
+                        return cat
+    except Exception as e:
+        print(f"Groq categorization failed: {e}")
+        pass # Fallback to keyword matching
+
+    # Fallback to keyword map
     desc_lower = description.lower()
     best_category = "Miscellaneous"
     best_score = 0

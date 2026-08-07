@@ -237,7 +237,10 @@ export default function Dashboard() {
                   const res = await fetch(`${API_BASE_URL}/api/export-data/`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                   });
-                  if (!res.ok) throw new Error('Failed to export');
+                  if (!res.ok) {
+                    const txt = await res.text();
+                    throw new Error(`HTTP ${res.status}: ${txt.substring(0, 50)}`);
+                  }
                   const blob = await res.blob();
                   const url = window.URL.createObjectURL(blob);
                   const a = document.createElement('a');
@@ -248,7 +251,7 @@ export default function Dashboard() {
                   a.remove();
                 } catch (e) {
                   console.error(e);
-                  alert('Export failed');
+                  alert(`Export failed: ${e.message}`);
                 }
               }}
               className="btn-secondary"

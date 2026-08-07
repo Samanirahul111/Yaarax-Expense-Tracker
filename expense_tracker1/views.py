@@ -676,7 +676,10 @@ class GroupMemberViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return GroupMember.objects.filter(group__user=self.request.user) | GroupMember.objects.filter(group__members__user=self.request.user).distinct()
+        from django.db.models import Q
+        return GroupMember.objects.filter(
+            Q(group__user=self.request.user) | Q(group__members__user=self.request.user)
+        ).distinct()
 
     def create(self, request, *args, **kwargs):
         group_id = request.data.get('group')

@@ -4,22 +4,6 @@ import { Wallet, CheckCircle2, Eye, EyeOff, ArrowRight, Shield, TrendingUp, Zap 
 import ForgotPasswordModal from './ForgotPasswordModal';
 import { API_BASE_URL } from '../api';
 
-// ─── Social Button SVG Icons ──────────────────────────────────────────────────
-const GoogleIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-  </svg>
-);
-
-const FacebookIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
-    <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
-  </svg>
-);
-
 // ─── Divider Component ────────────────────────────────────────────────────────
 const OrDivider = () => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '1.25rem 0' }}>
@@ -29,38 +13,48 @@ const OrDivider = () => (
   </div>
 );
 
-// ─── Social Buttons Component ─────────────────────────────────────────────────
-function SocialLoginButtons({ onGoogleClick, onFacebookClick, loading, socialLoading }) {
-  const [googleHover, setGoogleHover] = useState(false);
-  const [fbHover, setFbHover] = useState(false);
-  const btnBase = {
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.625rem',
-    width: '100%', padding: '11px 16px',
-    borderRadius: 'var(--radius-md)',
-    border: '1px solid var(--glass-border-md)',
-    background: 'rgba(255,255,255,0.04)',
-    color: 'var(--text-primary)',
-    fontFamily: 'var(--font-body)',
-    fontSize: '0.9rem', fontWeight: 600,
-    cursor: (loading || socialLoading) ? 'not-allowed' : 'pointer',
-    transition: 'all 0.2s ease',
-    outline: 'none',
-    opacity: (loading || socialLoading) ? 0.6 : 1,
-  };
+// ─── Google Login Component ─────────────────────────────────────────────────
+function GoogleLoginButton({ onSuccess, onError }) {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      if (onError) onError('Google Client ID not configured.');
+      return;
+    }
+
+    const renderButton = () => {
+      if (window.google && containerRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: onSuccess,
+        });
+        window.google.accounts.id.renderButton(containerRef.current, {
+          theme: 'outline',
+          size: 'large',
+          text: 'continue_with',
+          width: '320',
+          logo_alignment: 'center'
+        });
+      }
+    };
+
+    if (window.google) {
+      renderButton();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = renderButton;
+      document.head.appendChild(script);
+    }
+  }, [onSuccess, onError]);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      <button type="button" id="btn-google-login" onClick={onGoogleClick} disabled={loading || !!socialLoading}
-        onMouseEnter={() => setGoogleHover(true)} onMouseLeave={() => setGoogleHover(false)}
-        style={{ ...btnBase, background: googleHover ? 'rgba(66,133,244,0.1)' : 'rgba(255,255,255,0.04)', borderColor: googleHover ? 'rgba(66,133,244,0.5)' : 'var(--glass-border-md)', boxShadow: googleHover ? '0 0 0 3px rgba(66,133,244,0.12)' : 'none', transform: googleHover && !loading && !socialLoading ? 'translateY(-1px)' : 'none' }}>
-        <GoogleIcon />
-        {socialLoading === 'google' ? 'Connecting…' : 'Continue with Google'}
-      </button>
-      <button type="button" id="btn-facebook-login" onClick={onFacebookClick} disabled={loading || !!socialLoading}
-        onMouseEnter={() => setFbHover(true)} onMouseLeave={() => setFbHover(false)}
-        style={{ ...btnBase, background: fbHover ? 'rgba(24,119,242,0.1)' : 'rgba(255,255,255,0.04)', borderColor: fbHover ? 'rgba(24,119,242,0.5)' : 'var(--glass-border-md)', boxShadow: fbHover ? '0 0 0 3px rgba(24,119,242,0.12)' : 'none', transform: fbHover && !loading && !socialLoading ? 'translateY(-1px)' : 'none' }}>
-        <FacebookIcon />
-        {socialLoading === 'facebook' ? 'Connecting…' : 'Continue with Facebook'}
-      </button>
+    <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+      <div ref={containerRef}></div>
     </div>
   );
 }
@@ -83,8 +77,6 @@ export default function Auth() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
-  const [socialLoading, setSocialLoading] = useState(null); // 'google' | 'facebook' | null
-  const googleInitialized = useRef(false);
 
 
   const calculateStrength = () => {
@@ -153,45 +145,9 @@ export default function Auth() {
     warmUp();
   }, []);
 
-  // Load Google Identity Services SDK
-  useEffect(() => {
-    if (googleInitialized.current) return;
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId) return;
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleResponse,
-          auto_select: false,
-        });
-        googleInitialized.current = true;
-      }
-    };
-    document.head.appendChild(script);
-  }, []);
-
-  // Load Facebook JS SDK
-  useEffect(() => {
-    const appId = import.meta.env.VITE_FACEBOOK_APP_ID;
-    if (!appId || window.FB) return;
-    window.fbAsyncInit = function () {
-      window.FB.init({ appId, cookie: true, xfbml: true, version: 'v19.0' });
-    };
-    const script = document.createElement('script');
-    script.src = 'https://connect.facebook.net/en_US/sdk.js';
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-  }, []);
-
-  // ── Social Auth Handler (shared) ──────────────────────────────────────────
+  // ── Social Auth Handler ───────────────────────────────────────────────────
   const handleSocialAuthSuccess = async (provider, token) => {
-    setSocialLoading(provider);
+    setLoading(true);
     setError('');
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/social/`, {
@@ -208,21 +164,7 @@ export default function Auth() {
     } catch (err) {
       setError(err.message);
     } finally {
-      setSocialLoading(null);
-    }
-  };
-
-  // ── Google click ──────────────────────────────────────────────────────────
-  const handleGoogleClick = () => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      setError('Google Client ID not configured. Add VITE_GOOGLE_CLIENT_ID to your frontend .env file.');
-      return;
-    }
-    if (window.google && googleInitialized.current) {
-      window.google.accounts.id.prompt();
-    } else {
-      setError('Google Sign-In is loading, please try again in a moment.');
+      setLoading(false);
     }
   };
 
@@ -232,30 +174,6 @@ export default function Auth() {
     }
   };
 
-  // ── Facebook click ────────────────────────────────────────────────────────
-  const handleFacebookClick = () => {
-    const appId = import.meta.env.VITE_FACEBOOK_APP_ID;
-    if (!appId) {
-      setError('Facebook App ID not configured. Add VITE_FACEBOOK_APP_ID to your frontend .env file.');
-      return;
-    }
-    if (!window.FB) {
-      setError('Facebook SDK is loading, please try again in a moment.');
-      return;
-    }
-    setSocialLoading('facebook');
-    window.FB.login(
-      (response) => {
-        if (response.authResponse) {
-          handleSocialAuthSuccess('facebook', response.authResponse.accessToken);
-        } else {
-          setSocialLoading(null);
-          setError('Facebook login was cancelled.');
-        }
-      },
-      { scope: 'public_profile,email' }
-    );
-  };
 
 
   const toggleMode = (e) => {
@@ -418,12 +336,7 @@ export default function Auth() {
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', fontSize: '0.9rem' }}>Start managing your finances professionally.</p>
 
           {/* Social Signup Buttons */}
-          <SocialLoginButtons
-            onGoogleClick={handleGoogleClick}
-            onFacebookClick={handleFacebookClick}
-            loading={loading}
-            socialLoading={socialLoading}
-          />
+          <GoogleLoginButton onSuccess={handleGoogleResponse} onError={setError} />
           <OrDivider />
 
           {!isLogin && error && (
@@ -528,12 +441,7 @@ export default function Auth() {
           ) : !isOtpStep ? (
             <>
               {/* Social Login Buttons */}
-              <SocialLoginButtons
-                onGoogleClick={handleGoogleClick}
-                onFacebookClick={handleFacebookClick}
-                loading={loading}
-                socialLoading={socialLoading}
-              />
+              <GoogleLoginButton onSuccess={handleGoogleResponse} onError={setError} />
               <OrDivider />
 
               <form style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }} onSubmit={handleLoginSubmit}>

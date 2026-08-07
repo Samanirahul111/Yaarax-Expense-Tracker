@@ -27,6 +27,31 @@ export default function AddExpenseModal({ isOpen, onClose, onAdded, expenseToEdi
     }
   }, [isOpen, expenseToEdit, categories]);
 
+  // AI Auto-categorization as you type (debounced)
+  useEffect(() => {
+    if (!formData.description || formData.description.trim() === '') return;
+    const timeoutId = setTimeout(async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch(`${API_BASE_URL}/api/ml/predict-category/`, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+          body: JSON.stringify({ description: formData.description }) 
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.category) {
+            const matchedCat = categories.find(c => c.name.toLowerCase() === data.category.toLowerCase());
+            if (matchedCat) setFormData(prev => ({ ...prev, category: matchedCat.id }));
+          }
+        }
+      } catch (e) { 
+        console.error('ML Category prediction failed', e); 
+      }
+    }, 600); // 600ms debounce
+    return () => clearTimeout(timeoutId);
+  }, [formData.description, categories]);
+
   const fetchCategories = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/categories/`);
@@ -162,24 +187,8 @@ export default function AddExpenseModal({ isOpen, onClose, onAdded, expenseToEdi
 
             <div>
               <label className="auth-label">Description</label>
-              <input type="text" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} style={inputSt} onFocus={focus} onBlur={blur} required
-                onBlur={async (e) => {
-                  blur(e);
-                  if (!formData.description) return;
-                  try {
-                    const token = localStorage.getItem('access_token');
-                    const res = await fetch(`${API_BASE_URL}/api/ml/predict-category/`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ description: formData.description }) });
-                    if (res.ok) {
-                      const data = await res.json();
-                      if (data.category) {
-                        const matchedCat = categories.find(c => c.name.toLowerCase() === data.category.toLowerCase());
-                        if (matchedCat) setFormData(prev => ({ ...prev, category: matchedCat.id }));
-                      }
-                    }
-                  } catch (e) { console.error('ML Category prediction failed', e); }
-                }}
-              />
-              <small style={{ color: 'var(--accent-primary)', fontSize: '0.8rem', marginTop: '6px', display: 'block' }}>✨ AI will auto-categorize when you finish typing.</small>
+              <input type="text" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} style={inputSt} onFocus={focus} onBlur={blur} required />
+              <small style={{ color: 'var(--accent-primary)', fontSize: '0.8rem', marginTop: '6px', display: 'block' }}>✨ AI will auto-categorize as you type.</small>
             </div>
 
             <div>

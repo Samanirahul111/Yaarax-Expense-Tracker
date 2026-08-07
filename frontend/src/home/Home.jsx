@@ -155,7 +155,7 @@ export default function Home() {
               </span>
             </div>
 
-            <h1 className="animate-slide-up delay-100 text-center" style={{ color: 'var(--text-primary)', margin: '0 auto 1.25rem', maxWidth: '820px' }}>
+            <h1 className="animate-slide-up delay-100 text-center" style={{ color: 'var(--text-primary)', margin: '0 auto 1.25rem', maxWidth: '820px', fontSize: 'clamp(2.75rem, 6vw, 4.5rem)', lineHeight: 1.1, letterSpacing: '-0.03em', fontWeight: 900 }}>
               Master Your Finances with{' '}
               <span style={{
                 background: 'var(--grad-primary)',
@@ -167,7 +167,7 @@ export default function Home() {
               </span>
             </h1>
 
-            <p className="hero-subtitle animate-slide-up delay-200 text-center">
+            <p className="hero-subtitle animate-slide-up delay-200 text-center" style={{ fontSize: '1.15rem', opacity: 0.85, maxWidth: '650px', margin: '0 auto 2.5rem' }}>
               The professional standard for personal and business expense tracking.
               Gain complete visibility into your cash flow with AI-powered insights and beautiful analytics.
             </p>
@@ -213,23 +213,25 @@ export default function Home() {
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 1, delay: 0.6, type: 'spring', bounce: 0.4 }}
-              style={{
-                marginTop: '4rem',
-                position: 'relative',
-                width: '100%',
-                maxWidth: '900px',
-                height: '400px',
-                margin: '4rem auto 0',
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--glass-border-md)',
-                borderRadius: 'var(--radius-2xl)',
-                boxShadow: 'var(--shadow-2xl), 0 0 60px rgba(59, 130, 246, 0.15)',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column'
-              }}
               className="mobile-hidden"
+              style={{ marginTop: '4rem', width: '100%', maxWidth: '900px', margin: '4rem auto 0' }}
             >
+              <motion.div
+                animate={{ y: [0, -15, 0] }}
+                transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '400px',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--glass-border-md)',
+                  borderRadius: 'var(--radius-2xl)',
+                  boxShadow: 'var(--shadow-2xl), 0 20px 80px rgba(59, 130, 246, 0.15)',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+              >
               {/* Mockup Header */}
               <div style={{ padding: '1rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.2)' }}>
                 <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444' }} />
@@ -254,6 +256,7 @@ export default function Home() {
                    <div style={{ width: '100%', flex: 1, background: 'var(--bg-surface)', border: '1px solid var(--glass-border)', borderRadius: '8px' }} />
                 </div>
               </div>
+              </motion.div>
             </motion.div>
           </div>
         </section>
@@ -284,9 +287,9 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="features">
+            <div className="bento-grid">
               {features.map((f, idx) => (
-                <FeatureCard key={idx} {...f} delay={`delay-${(idx % 3 + 1) * 100}`} />
+                <FeatureCard key={idx} {...f} delay={(idx % 3 + 1) * 0.1} index={idx} />
               ))}
             </div>
           </div>
@@ -301,16 +304,16 @@ export default function Home() {
           backdropFilter: 'blur(4px)',
         }}>
           <div className="section-content">
-            <div className="text-center animate-slide-up" style={{ marginBottom: '3rem' }}>
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center" style={{ marginBottom: '3rem' }}>
               <h2 className="section-title" style={{ fontSize: '2rem' }}>Trusted by thousands</h2>
-            </div>
+            </motion.div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
               {[
                 { icon: <Users size={28} />, value: stats.total_users, suffix: '+', label: 'Active Users', color: 'var(--accent-primary)', bg: 'rgba(59,130,246,0.12)' },
                 { icon: <Star size={28} fill="#f59e0b" color="#f59e0b" />, value: stats.average_rating || 4.9, suffix: '', label: `from ${stats.total_ratings || '100'}+ reviews`, color: 'var(--accent-amber)', bg: 'rgba(245,158,11,0.12)' },
                 { icon: <CheckCircle2 size={28} />, value: 99, suffix: '%', label: 'Satisfaction Rate', color: 'var(--accent-emerald)', bg: 'rgba(16,185,129,0.12)' },
               ].map((s, i) => (
-                <div key={i} className="animate-scale-in" style={{
+                <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1, type: 'spring' }} style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem',
                   padding: '2rem 3rem',
                   background: s.bg,
@@ -318,7 +321,6 @@ export default function Home() {
                   borderRadius: 'var(--radius-2xl)',
                   minWidth: '220px',
                   backdropFilter: 'blur(12px)',
-                  animation: `scaleIn 0.5s var(--ease-spring) ${i * 100 + 200}ms both`,
                 }}>
                   <div style={{ color: s.color }}>{s.icon}</div>
                   <div style={{
@@ -328,7 +330,7 @@ export default function Home() {
                     <AnimatedCounter target={typeof s.value === 'number' ? s.value : 0} suffix={s.suffix} />
                   </div>
                   <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{s.label}</div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -337,7 +339,7 @@ export default function Home() {
         {/* ─── TEAM ─── */}
         <section className="section" style={{ padding: '5rem 2rem' }}>
           <div className="section-content">
-            <div className="text-center animate-slide-up" style={{ marginBottom: '3.5rem' }}>
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center" style={{ marginBottom: '3.5rem' }}>
               <div style={{
                 display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
                 padding: '0.35rem 1rem',
@@ -353,10 +355,10 @@ export default function Home() {
               </div>
               <h2 className="section-title">Meet the Creator</h2>
               <p className="section-subtitle">The vision and code behind Yaarax Expense Tracker.</p>
-            </div>
+            </motion.div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <div className="animate-slide-up delay-100 card-solid" style={{
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <div className="card-solid" style={{
                 padding: '2.5rem',
                 textAlign: 'center',
                 display: 'flex',
@@ -402,7 +404,7 @@ export default function Home() {
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
 
@@ -422,7 +424,7 @@ export default function Home() {
             filter: 'blur(40px)', pointerEvents: 'none',
           }} />
 
-          <div className="section-content text-center animate-slide-up" style={{ position: 'relative' }}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="section-content text-center" style={{ position: 'relative' }}>
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
               padding: '0.35rem 1rem',
@@ -460,46 +462,77 @@ export default function Home() {
                 View Demo
               </button>
             </div>
-          </div>
+          </motion.div>
         </section>
       </main>
     </div>
   );
 }
 
-function FeatureCard({ icon, title, desc, gradient, glow, accent, delay }) {
+function FeatureCard({ icon, title, desc, gradient, glow, accent, delay, index }) {
   const [hovered, setHovered] = useState(false);
   return (
-    <div
-      className={`animate-slide-up ${delay} card-solid`}
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.6, delay: delay, type: 'spring', bounce: 0.4 }}
+      className="card-solid bento-item"
       style={{
-        padding: '2rem',
-        transition: 'transform 0.35s var(--ease-bounce), box-shadow 0.35s ease, border-color 0.3s ease',
-        transform: hovered ? 'translateY(-8px)' : 'translateY(0)',
-        boxShadow: hovered ? `var(--shadow-xl), 0 0 40px ${glow}` : 'none',
-        borderColor: hovered ? `${accent}40` : 'var(--glass-border)',
+        padding: '2.5rem',
+        transition: 'transform 0.4s var(--ease-bounce), box-shadow 0.4s ease, border-color 0.3s ease',
+        transform: hovered ? 'translateY(-6px) scale(1.01)' : 'translateY(0) scale(1)',
+        boxShadow: hovered ? `var(--shadow-xl), 0 0 40px ${glow}` : 'var(--shadow-md)',
+        borderColor: hovered ? `${accent}60` : 'var(--glass-border-md)',
+        background: hovered ? `linear-gradient(135deg, var(--bg-card) 0%, ${gradient} 100%)` : 'var(--bg-card)',
         cursor: 'default',
+        justifyContent: 'space-between',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%'
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div style={{
-        width: '50px', height: '50px', borderRadius: 'var(--radius-md)',
-        background: hovered ? `linear-gradient(135deg, ${glow}, ${gradient})` : gradient,
-        border: `1px solid ${hovered ? accent + '66' : accent + '33'}`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: accent, marginBottom: '1.25rem',
-        transition: 'all 0.35s var(--ease-bounce)',
-        transform: hovered ? 'scale(1.12) rotate(5deg)' : 'scale(1)',
-        boxShadow: hovered ? `0 8px 20px ${glow}` : 'none',
-      }}>
-        {icon}
+      <div>
+        <div style={{
+          width: '56px', height: '56px', borderRadius: 'var(--radius-lg)',
+          background: hovered ? `linear-gradient(135deg, ${glow}, ${gradient})` : `linear-gradient(135deg, ${gradient}, transparent)`,
+          border: `1px solid ${hovered ? accent + '80' : accent + '40'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: hovered ? '#fff' : accent, marginBottom: '1.5rem',
+          transition: 'all 0.4s var(--ease-bounce)',
+          transform: hovered ? 'scale(1.15) rotate(8deg)' : 'scale(1)',
+          boxShadow: hovered ? `0 10px 25px ${glow}` : 'none',
+        }}>
+          {icon}
+        </div>
+        <h3 style={{
+          fontFamily: 'var(--font-heading)', fontSize: '1.35rem', fontWeight: 800,
+          marginBottom: '0.75rem', color: 'var(--text-primary)',
+          letterSpacing: '-0.02em'
+        }}>
+          {title}
+        </h3>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
+          {desc}
+        </p>
       </div>
-      <h3 style={{
-        fontFamily: 'var(--font-heading)', fontSize: '1.1rem', fontWeight: 700,
-        marginBottom: '0.6rem', color: 'var(--text-primary)',
-      }}>{title}</h3>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.65 }}>{desc}</p>
-    </div>
+
+      {index === 0 && (
+          <div style={{ marginTop: '2rem', flex: 1, background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '12px', minHeight: '120px' }}>
+              <div style={{ width: '40%', height: '8px', borderRadius: '4px', background: 'var(--accent-primary)', opacity: 0.8 }} />
+              <div style={{ width: '100%', height: '8px', borderRadius: '4px', background: 'var(--glass-border-md)' }} />
+              <div style={{ width: '75%', height: '8px', borderRadius: '4px', background: 'var(--glass-border-md)' }} />
+          </div>
+      )}
+      {index === 3 && (
+          <div style={{ marginTop: '2rem', flex: 1, background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)', padding: '1.5rem', display: 'flex', alignItems: 'flex-end', gap: '12px', minHeight: '120px' }}>
+              <div style={{ flex: 1, height: '40%', background: 'var(--accent-amber)', borderRadius: '4px 4px 0 0', opacity: 0.5 }} />
+              <div style={{ flex: 1, height: '70%', background: 'var(--accent-amber)', borderRadius: '4px 4px 0 0', opacity: 0.7 }} />
+              <div style={{ flex: 1, height: '100%', background: 'var(--accent-amber)', borderRadius: '4px 4px 0 0' }} />
+          </div>
+      )}
+    </motion.div>
   );
 }

@@ -527,13 +527,35 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================================
-   FEATURES GRID
+   BENTO GRID (FEATURES)
    ============================================================ */
-.features {
+.bento-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(12, 1fr);
   gap: 1.5rem;
   width: 100%;
+}
+
+.bento-item {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.bento-item:nth-child(1) { grid-column: span 7; }
+.bento-item:nth-child(2) { grid-column: span 5; }
+.bento-item:nth-child(3) { grid-column: span 5; }
+.bento-item:nth-child(4) { grid-column: span 7; }
+.bento-item:nth-child(5) { grid-column: span 6; }
+.bento-item:nth-child(6) { grid-column: span 6; }
+
+@media (max-width: 900px) {
+  .bento-item:nth-child(1), .bento-item:nth-child(2),
+  .bento-item:nth-child(3), .bento-item:nth-child(4),
+  .bento-item:nth-child(5), .bento-item:nth-child(6) {
+    grid-column: span 12;
+  }
 }
 
 .feature-card {

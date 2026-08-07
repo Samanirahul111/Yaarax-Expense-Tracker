@@ -9,13 +9,13 @@
    ============================================================ */
 :root {
   /* Backgrounds */
-  --bg-deep:      #000000;
-  --bg-surface:   #0a0a0a;
-  --bg-elevated:  #111111;
-  --bg-card:      #111111;
-  --bg-glass:     rgba(255, 255, 255, 0.03);
-  --bg-glass-md:  rgba(255, 255, 255, 0.05);
-  --bg-glass-lg:  rgba(255, 255, 255, 0.08);
+  --bg-deep:      #060b18;
+  --bg-surface:   #0d1426;
+  --bg-elevated:  #111827;
+  --bg-card:      #111827;
+  --bg-glass:     rgba(255, 255, 255, 0.04);
+  --bg-glass-md:  rgba(255, 255, 255, 0.07);
+  --bg-glass-lg:  rgba(255, 255, 255, 0.10);
 
   /* Glass Borders */
   --glass-border:      rgba(255, 255, 255, 0.10);
@@ -1249,4 +1249,10 @@ h1, h2, h3, h4, h5, h6 {
   background: linear-gradient(90deg, transparent, var(--accent-primary), var(--accent-violet), transparent);
   opacity: 0.5;
   margin: 2rem 0;
+}
+
+/* Fix for Select Dropdown Options */
+select option {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
 }
